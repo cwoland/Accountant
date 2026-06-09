@@ -6,6 +6,9 @@ const generateToken = (id) =>
 
 export const register = async (req, res, next) => {
     try {
+        console.log('BODY: ', req.body);
+        console.log('HEADERS: ', req.headers['content-type']);
+        
         const name = req.body.name?.trim();
         const email = req.body.emal?.trim().toLowerCase();
         const password = req.body.password;
