@@ -5,61 +5,61 @@ const generateToken = (id) =>
     jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
 export const register = async (req, res, next) => {
-    try {
-        console.log('RAW BODY:', JSON.stringify(req.body));
-        const name = req.body.name?.trim();
-        const email = req.body.emal?.trim().toLowerCase();
-        const password = req.body.password;
+  try {
+    const { name, email, password } = req.body;
 
-        console.log('PARSED -> name: ', name, '| email:', email, '| password exists:', !!password);
+    console.log('DESTRUCTURED → name:', name, '| email:', email, '| pass:', !!password);
 
-        if (!name || !email || !password)
-            return res.status(400).json({ message: 'Заполните все поля.'});
+    if (!name?.trim() || !email?.trim() || !password)
+      return res.status(400).json({ message: 'Заполните все поля.' });
 
-        const exists = await User.findOne({ email });
-        if (exists)
-            return res.status(400).json({ message: 'Email уже зарегистрирован' });
+    const cleanEmail = email.trim().toLowerCase();
 
-        const user = await User.create({ name, email, password });
+    const exists = await User.findOne({ email: cleanEmail });
+    if (exists)
+      return res.status(400).json({ message: 'Email уже зарегистрирован.' });
 
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            currency: user.currency,
-            monthlyBudget: user.monthlyBudget,
-            avatar: user.avatar,
-            token: generateToken(user._id),
-        });
-    } catch (err) {
-        next(err);
-    }
+    const user = await User.create({ name: name.trim(), email: cleanEmail, password });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      currency: user.currency,
+      monthlyBudget: user.monthlyBudget,
+      avatar: user.avatar,
+      token: generateToken(user._id),
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const login = async (req, res, next) => {
-    try {
-        const email = req.body.email?.trim().toLowerCase();
-        const password = req.body.password;
+  try {
+    const { email, password } = req.body;
 
-        if (!email || !password)
-            return res.status(400).json({ message: 'Заполните все поля' });
+    if (!email?.trim() || !password)
+      return res.status(400).json({ message: 'Заполните все поля.' });
 
-        const user = await User.findOne({ email }).select('+password');
-        if (!user || !(await user.matchPassword(password)))
-            return res.status(401).json({ message: 'Неверный email или пароль'});
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            currency: user.currency,
-            monthlyBudget: user.monthlyBudget,
-            avatar: user.avatar,
-            token: generateToken(user._id),
-        });
-    } catch (err) {
-        next(err);
-    }
+    if (!user || !(await user.matchPassword(password)))
+      return res.status(401).json({ message: 'Неверный email или пароль.' });
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      currency: user.currency,
+      monthlyBudget: user.monthlyBudget,
+      avatar: user.avatar,
+      token: generateToken(user._id),
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getMe = async (req, res) => {
