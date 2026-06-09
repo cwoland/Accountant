@@ -23,7 +23,7 @@ function GuestRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowseRouter>
+    <BrowserRouter>
      <Routes>
       <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
       <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
@@ -39,6 +39,6 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
      </Routes>
-    </BrowseRouter>
+    </BrowserRouter>
   );
 }
