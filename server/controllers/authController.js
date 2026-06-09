@@ -6,7 +6,9 @@ const generateToken = (id) =>
 
 export const register = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
+        const name = req.body.name?.trim();
+        const email = req.body.emal?.trim().toLowerCase();
+        const password = req.body.password;
 
         if (!name || !email || !password)
             return res.status(400).json({ message: 'Заполните все поля'});
@@ -33,7 +35,8 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        const email = req.body.email?.trim().toLowerCase();
+        const password = req.body.password;
 
         if (!email || !password)
             return res.status(400).json({ message: 'Заполните все поля' });
