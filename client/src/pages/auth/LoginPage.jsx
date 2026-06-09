@@ -57,7 +57,7 @@ export default function LoginPage() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="auth-brand"
             style={{
-                background='var(--surface)',
+                background: 'var(--surface)',
                 borderRight: '1px solid var(--border)',
                 display: 'flex',
                 flexDirection: 'column',
