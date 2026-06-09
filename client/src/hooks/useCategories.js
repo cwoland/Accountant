@@ -11,7 +11,7 @@ export default function useCategories() {
     return {
         categories: data || [],
         incomeCategories: (data || []).filter((c) => c.type === 'income' || c.type === 'both'),
-        expenseCategories: (dadta || []).filter((c) => c.type === 'expense' || c.type === 'both'),
+        expenseCategories: (data || []).filter((c) => c.type === 'expense' || c.type === 'both'),
         mandatoryCategories: (data || []).filter((c) => c.isMandatory),
         isLoading,
     };
