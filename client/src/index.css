@@ -136,6 +136,11 @@ body::before {
   position: relative;
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 @media (max-width: 768px) {
   .auth-page { grid-template-columns: 1fr; }
   .auth-brand { display: none; }
