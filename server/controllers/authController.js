@@ -6,15 +6,14 @@ const generateToken = (id) =>
 
 export const register = async (req, res, next) => {
     try {
-        console.log('BODY: ', req.body);
-        console.log('HEADERS: ', req.headers['content-type']);
-        
         const name = req.body.name?.trim();
         const email = req.body.emal?.trim().toLowerCase();
         const password = req.body.password;
 
+        console.log('PARSED -> name: ', name, '| email:', email, '| password exists:', !!password);
+
         if (!name || !email || !password)
-            return res.status(400).json({ message: 'Заполните все поля'});
+            return res.status(400).json({ message: 'Заполните все поля.'});
 
         const exists = await User.findOne({ email });
         if (exists)
