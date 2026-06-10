@@ -7,23 +7,40 @@ export default function WakeUpBanner() {
     const [status, setStatus] = useState('idle');
 
     useEffect(() => {
-        let timer;
-        const controller = new AbortController();
+  let timer;
+  const controller = new AbortController();
 
-        const check = async () => {
-            try {
-                const start = Date.now();
-                await api.get('/health', { signal: controller.signal, timeout: 35000 });
-                const elapsed = Date.now() - start;
+  const check = async () => {
+    try {
+      const start = Date.now();
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/health`,
+        { signal: controller.signal }
+      );
+      if (!res.ok) return;
+      const elapsed = Date.now() - start;
+      if (elapsed > 3000) {
+        setStatus('awake');
+        setTimeout(() => setStatus('idle'), 3000);
+      }
+    } catch {
+        
+    }
+  };
 
-                if (elapsed > 3000) {
-                    setStatus('awake');
-                    setTimeout(() => setStatus('idle'), 3000);
-                }
-            } catch {
+  timer = setTimeout(() => {
+    setStatus('waking');
+    check();
+  }, 2000);
 
-            }
-        };
+  check();
+
+  return () => {
+    clearTimeout(timer);
+    controller.abort();
+  };
+}, []);
+
 
         timer = setTimeout(() => {
             setStatus('waking');
