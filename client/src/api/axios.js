@@ -14,7 +14,7 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
     (res) => res,
-    (er) => {
+    (err) => {
         if (err.response?.status === 401) {
             useStore.getState().logout();
             window.location.href = '/login';
