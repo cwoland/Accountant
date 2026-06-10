@@ -41,20 +41,6 @@ export default function WakeUpBanner() {
   };
 }, []);
 
-
-        timer = setTimeout(() => {
-            setStatus('waking');
-            check();
-        }, 2000);
-
-        check();
-
-        return () => {
-            clearTimeout(timer);
-            controller.abort();
-        };
-    }, []);
-
     return (
         <AnimatePresence>
       {status !== 'idle' && (
