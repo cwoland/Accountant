@@ -5,55 +5,61 @@ const generateToken = (id) =>
     jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
 export const register = async (req, res, next) => {
-    try {
-        const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-        if (!name || !email || !password)
-            return res.status(400).json({ message: 'Заполните все поля'});
+    console.log('DESTRUCTURED → name:', name, '| email:', email, '| pass:', !!password);
 
-        const exists = await User.findOne({ email });
-        if (exists)
-            return res.status(400).json({ message: 'Email уже зарегистрирован' });
+    if (!name?.trim() || !email?.trim() || !password)
+      return res.status(400).json({ message: 'Заполните все поля.' });
 
-        const user = await User.create({ name, email, password });
+    const cleanEmail = email.trim().toLowerCase();
 
-        res.status(201).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            currency: user.currency,
-            monthlyBudget: user.monthlyBudget,
-            avatar: user.avatar,
-            token: generateToken(user._id),
-        });
-    } catch (err) {
-        next(err);
-    }
+    const exists = await User.findOne({ email: cleanEmail });
+    if (exists)
+      return res.status(400).json({ message: 'Email уже зарегистрирован.' });
+
+    const user = await User.create({ name: name.trim(), email: cleanEmail, password });
+
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      currency: user.currency,
+      monthlyBudget: user.monthlyBudget,
+      avatar: user.avatar,
+      token: generateToken(user._id),
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const login = async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        if (!email || !password)
-            return res.status(400).json({ message: 'Заполните все поля' });
+    if (!email?.trim() || !password)
+      return res.status(400).json({ message: 'Заполните все поля.' });
 
-        const user = await User.findOne({ email }).select('+password');
-        if (!user || !(await user.matchPassword(password)))
-            return res.status(401).json({ message: 'Неверный email или пароль'});
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
 
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            currency: user.currency,
-            monthlyBudget: user.monthlyBudget,
-            avatar: user.avatar,
-            token: generateToken(user._id),
-        });
-    } catch (err) {
-        next(err);
-    }
+    if (!user || !(await user.matchPassword(password)))
+      return res.status(401).json({ message: 'Неверный email или пароль.' });
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      currency: user.currency,
+      monthlyBudget: user.monthlyBudget,
+      avatar: user.avatar,
+      token: generateToken(user._id),
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 export const getMe = async (req, res) => {
