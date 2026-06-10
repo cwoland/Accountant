@@ -17,7 +17,7 @@ connectDB();
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: '*', credentials: false }));
+app.use(cors({ origin: process.meta.env.CLIENT_URL, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
