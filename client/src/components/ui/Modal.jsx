@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-export default function Modal({ open, close, title, children, width = 480 }) {
+export default function Modal({ open, onClose, title, children, width = 480 }) {
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onclose(); };
         if (open) document.addEventListener('keydown', handler);

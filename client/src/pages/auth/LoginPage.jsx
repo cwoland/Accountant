@@ -34,7 +34,7 @@ export default function LoginPage() {
         if (!validate()) return;
         setLoading(true);
         try {
-            const { data } = await LoginApi(form);
+            const { data } = await loginApi(form);
             setAuth(data, data.token);
             toast.success(`С возвращением, ${data.name}!`);
             navigate('/');
