@@ -52,7 +52,7 @@ body {
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--text-1);
-  min-height: 100vh;
+  min-height: var(--app-height);
   min-height: -webkit-fill-available;
   overflow-x: hidden;
 }
@@ -79,7 +79,7 @@ h1,h2,h3,h4,h5,h6 {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   grid-template-rows: var(--header-h) 1fr;
-  min-height: 100vh;
+  min-height: var(--app-height);
   min-height: -webkit-fill-available;
 }
 
@@ -134,7 +134,8 @@ body::before {
 }
 
 .auth-page {
-  min-height: 100vh;
+  min-height: var(--app-height);
+  min-height: -webkit-fill-available;
   display: grid;
   grid-template-columns: 1fr 1fr;
   position: relative;
