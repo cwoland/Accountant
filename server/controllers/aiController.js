@@ -1,5 +1,5 @@
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'mistralai/mistral-7b-instruct:free';
+const MODEL = 'nex-agi/nex-n2-pro:free';
 
 const callAI = async (messages) => {
   const res = await fetch(OPENROUTER_URL, {
@@ -7,7 +7,7 @@ const callAI = async (messages) => {
     headers: {
       Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'http://localhost:5173',
+      'HTTP-Referer': 'https://accountant-bay.vercel.app',
       'X-Title': 'Accountant App',
     },
     body: JSON.stringify({ model: MODEL, messages, max_tokens: 500 }),

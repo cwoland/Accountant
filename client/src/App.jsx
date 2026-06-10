@@ -10,6 +10,7 @@ import ProductsPage       from './pages/ProductsPage';
 import ProfilePage        from './pages/ProfilePage';
 import AiPage             from './pages/AiPage';
 import AppLayout          from './components/layout/AppLayout';
+import NotFoundPage       from './pages/NotFoundPage';
 
 function PrivateRoute({ children }) {
   const token = useStore((s) => s.token);
@@ -37,7 +38,7 @@ export default function App() {
        <Route path="/profile"       element={<ProfilePage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
      </Routes>
     </BrowserRouter>
   );

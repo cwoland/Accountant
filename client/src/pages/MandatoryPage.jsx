@@ -11,6 +11,7 @@ import Modal from '../components/ui/Modal';
 import Loader from '../components/ui/Loader';
 import Badge from '../components/ui/Badge';
 import TransactionForm from '../components/TransactionForm';
+import EmptyState from '../components/ui/EmptyState';
 import { formatCurrency, getMonthRange } from '../utils/formatters';
 
 export default function MandatoryPage() {
@@ -94,9 +95,11 @@ export default function MandatoryPage() {
       {isLoading ? <Loader text="Загружаем данные..." /> : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
           {mandatoryCategories.length === 0 ? (
-            <p style={{ color: 'var(--text-3)', fontSize: '0.875rem', gridColumn: '1/-1', textAlign: 'center', padding: 40 }}>
-              Обязательных категорий нет. Они добавляются через сид-скрипт.
-            </p>
+            <EmptyState
+             icon="🏠"
+             title="Нет обязательных категорий"
+             description="Запустите сид-скрипт на сервере чтобы добавить системные категории: аренда, ЖКХ, кредиты и другие."
+             />
           ) : mandatoryCategories.map((cat, i) => {
             const catTx = mandatoryTx.filter((t) => t.category?._id === cat._id);
             const paid = catTx.reduce((s, t) => s + t.amount, 0);

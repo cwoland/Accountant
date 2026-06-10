@@ -111,8 +111,13 @@ export default function AiPage() {
     if (id === 'cat') return;
 
     if (id === 'analyze') {
-      if (!stats?.summary?.expense) {
-        pushMsg('ai', 'Нет данных о расходах за этот месяц. Сначала добавь несколько транзакций!');
+      if (!stats?.summary?.expense && !stats?.summary?.income) {
+        pushMsg('ai',
+      '📊 У тебя пока нет транзакций за этот месяц.\n\n' +
+      'Добавь несколько доходов и расходов на странице Транзакции — ' +
+      'и я смогу сделать полноценный анализ твоих финансов!'
+    );
+    setActiveQuick(null);
         return;
       }
       pushMsg('user', 'Проанализируй мои расходы за этот месяц');

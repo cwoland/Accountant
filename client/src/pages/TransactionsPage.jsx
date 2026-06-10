@@ -5,12 +5,14 @@ import useTransactions from '../hooks/useTransactions';
 import useCategories from '../hooks/useCategories';
 import useStore from '../store/useStore';
 import Button from '../components/ui/Button';
+import ConfirmModal from '../components/ui/ConfirmModal';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import Loader from '../components/ui/Loader';
 import Select from '../components/ui/Select';
 import TransactionForm from '../components/TransactionForm';
+import EmptyState from '../components/ui/EmptyState';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 const FADE = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
@@ -23,6 +25,7 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState('');
   const [catFilter, setCatFilter] = useState('');
   const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const params = {
     page, limit: 15,
@@ -44,8 +47,11 @@ export default function TransactionsPage() {
     { id: editing._id, data },
     { onSuccess: () => { setModal(null); setEditing(null); } }
   );
-  const handleDelete = (id) => {
-    if (confirm('Удалить транзакцию?')) remove.mutate(id);
+  const handleDelete = (id) => setDeleteTarget(id);
+
+  const confirmDelete = () => {
+    remove.mutate(deleteTarget);
+    setDeleteTarget(null);
   };
 
   const openEdit = (tx) => {
@@ -126,10 +132,21 @@ export default function TransactionsPage() {
             </div>
 
             {filtered.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'var(--text-3)',
-                fontSize: '0.875rem', padding: '48px 0' }}>
-                Транзакций не найдено
-              </p>
+              <div style={{ padding: '16px 0' }}>
+                <EmptyState
+                 icon="🧾"
+                 title={search || typeFilter || catFilter
+                 ? 'Ничего не найдено'
+                 : 'Транзакций пока нет'}
+                 description={search || typeFilter || catFilter
+                 ? 'Попробуйте изменить фильтры или поисковый запрос.'
+                 : 'Начните вести учёт — добавьте первый доход или расход.'}
+                 action={!search && !typeFilter && !catFilter
+                 ? () => setModal('add')
+                 : null}
+                actionLabel="Добавить первую транзакцию"
+                 />
+              </div>
             ) : (
               <AnimatePresence>
                 {filtered.map((tx, i) => (
@@ -237,6 +254,12 @@ export default function TransactionsPage() {
       <Modal open={modal === 'edit'} onClose={() => { setModal(false); setEditing(null); }} title="Редактировать">
         <TransactionForm initial={editing} onSubmit={handleEdit} loading={update.isPending} />
       </Modal>
+      <ConfirmModal
+      open={!!deleteTarget}
+      onConfirm={confirmDelete}
+      onCancel={() => setDeleteTarget(null)}
+      title="Удалить транзакцию?"
+      message="Транзакция будет удалена безвозвратно." />
     </div>
   );
 }

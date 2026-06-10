@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, Wallet, ArrowUpRight,
@@ -14,12 +15,14 @@ import { formatCurrency, getMonthRange } from '../utils/formatters';
 import useStore from '../store/useStore';
 import Loader from '../components/ui/Loader';
 import Card from '../components/ui/Card';
+import EmptyState from '../components/ui/EmptyState';
 
 const FADE = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
 };
+const navigate = useNavigate();
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -173,9 +176,11 @@ export default function DashboardPage() {
               Динамика за 6 месяцев
             </p>
             {chartData.length === 0
-              ? <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>
-                  Нет данных за выбранный период
-                </p>
+              ? <EmptyState 
+              icon="📊"
+              title="Нет данных за период"
+              description="Добавьте транзакции — и здесь появится динамика доходов и расходов по месяцам."
+               />
               : <ResponsiveContainer width="100%" height={220}>
                   <AreaChart data={chartData}>
                     <defs>
@@ -209,9 +214,11 @@ export default function DashboardPage() {
               Расходы по категориям
             </p>
             {expenseCats.length === 0
-              ? <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', textAlign: 'center', padding: '40px 0' }}>
-                  Нет расходов
-                </p>
+              ? <EmptyState
+              icon="🥧"
+              title="Нет расходов"
+              description="Данные по категориям появятся после первых трат."
+               />
               : <>
                   <ResponsiveContainer width="100%" height={160}>
                     <PieChart>
@@ -259,9 +266,12 @@ export default function DashboardPage() {
           {txLoading
             ? <Loader size={24} />
             : txData?.transactions?.length === 0
-              ? <p style={{ color: 'var(--text-3)', fontSize: '0.85rem', textAlign: 'center', padding: '24px 0' }}>
-                  Транзакций пока нет. Добавьте первую!
-                </p>
+              ? <EmptyState
+              icon="💸"
+              title="Транзакций пока нет"
+              description="Добавьте первый доход или расход — и здесь появится история операций с графиками и аналитикой."
+              action={() => navigate('/transactions')}
+              actionLabel="Добавить транзакцию" />
               : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {txData?.transactions?.map((tx) => (
                     <div key={tx._id} style={{

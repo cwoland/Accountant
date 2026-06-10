@@ -9,6 +9,7 @@ import Modal from '../components/ui/Modal';
 import Badge from '../components/ui/Badge';
 import Loader from '../components/ui/Loader';
 import TransactionForm from '../components/TransactionForm';
+import EmptyState from '../components/ui/EmptyState';
 import { formatCurrency, formatDate, getMonthRange } from '../utils/formatters';
 
 const PRODUCT_KEYWORDS = ['продукт', 'еда', 'товар', 'покупк', 'магазин', 'аптек', 'одежд', 'обувь', 'техник'];
@@ -124,9 +125,21 @@ export default function ProductsPage() {
       {isLoading ? <Loader text="Загружаем покупки..." /> : (
         filtered.length === 0
           ? <Card>
-              <p style={{ textAlign: 'center', color: 'var(--text-3)', fontSize: '0.875rem', padding: '40px 0' }}>
-                Ничего не найдено
-              </p>
+              <EmptyState
+          icon={tab === 'service' ? '⚙️' : tab === 'product' ? '📦' : '🛒'}
+          title={search
+            ? 'Ничего не найдено'
+            : tab === 'all'
+              ? 'Покупок пока нет'
+              : tab === 'product'
+                ? 'Товаров пока нет'
+                : 'Услуг пока нет'}
+          description={search
+            ? 'Попробуйте изменить поисковый запрос.'
+            : 'Добавьте расход с описанием — и он появится здесь с автоматической классификацией.'}
+          action={!search ? () => setModal(true) : null}
+          actionLabel="Добавить покупку"
+        />
             </Card>
           : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
               {filtered.map((tx, i) => (
