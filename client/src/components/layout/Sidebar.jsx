@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -248,7 +248,7 @@ export default function Sidebar() {
     const check = () => setIsMobile(window.innerWidth <= 768);
     check();
     window.addEventListener('resize', check);
-    return () => window.removeEventListener('resze', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   if (isMobile) {
