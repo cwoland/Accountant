@@ -6,7 +6,6 @@ import {
   ShoppingCart, Sparkles, User, LogOut, Wallet, Menu, X,
 } from 'lucide-react';
 import useStore from '../../store/useStore';
-import useIsMobile from '../../hooks/useIsMobile';
 import toast from 'react-hot-toast';
 
 const links = [
@@ -242,8 +241,15 @@ export function MobileTopBar({ onOpen }) {
 }
 
 export default function Sidebar() {
-  const isMobile = useIsMobile();
+  const [isMobile, setIsMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resze', check);
+  }, []);
 
   if (isMobile) {
     return (
