@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Server, X } from 'lucide-react';
-import api from '../../api/axios';
 
 export default function WakeUpBanner() {
     const [status, setStatus] = useState('idle');

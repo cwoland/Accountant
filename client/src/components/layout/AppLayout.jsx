@@ -18,7 +18,6 @@ export default function AppLayout() {
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: '100vh',
         minHeight: '-webkit-fill-available',
         background: 'var(--bg)',
         position: 'relative',

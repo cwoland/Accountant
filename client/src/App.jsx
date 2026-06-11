@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import useStore from './store/useStore';
-
 import LoginPage          from './pages/auth/LoginPage';
 import RegisterPage       from './pages/auth/RegisterPage';
 import DashboardPage      from './pages/DashboardPage';
@@ -26,9 +25,10 @@ function GuestRoute({ children }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
     <WakeUpBanner />
     <InstallBanner />
+    <BrowserRouter>
      <Routes>
       <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
       <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
@@ -45,5 +45,6 @@ export default function App() {
       <Route path="*" element={<NotFoundPage />} />
      </Routes>
     </BrowserRouter>
+    </>
   );
 }
