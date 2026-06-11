@@ -46,13 +46,7 @@ function NavLinks({ onClose }) {
             {({ isActive }) => (
               <>
                 {isActive && (
-                  <motion.div layoutId="sidebar-active"
-                    style={{
-                      position: 'absolute', inset: 0,
-                      background: 'var(--surface)', borderRadius: 'var(--radius-m)',
-                      border: '1px solid var(--border-2)', zIndex: -1,
-                    }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  <div layoutId="sidebar-active"
                   />
                 )}
                 <span style={{ color: isActive ? 'var(--accent-2)' : 'inherit' }}>{icon}</span>
@@ -114,19 +108,7 @@ function NavLinks({ onClose }) {
 
 function DesktopSidebar() {
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      style={{
-        gridColumn: 1, gridRow: '1 / 3',
-        background: 'var(--bg-2)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex', flexDirection: 'column',
-        padding: '0 12px',
-        position: 'sticky', top: 0,
-        height: '100vh', zIndex: 100,
-      }}
+    <aside
     >
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
@@ -145,7 +127,7 @@ function DesktopSidebar() {
         </span>
       </div>
       <NavLinks />
-    </motion.aside>
+    </aside>
   );
 }
 
@@ -154,26 +136,9 @@ function MobileDrawer({ open, onClose }) {
     <AnimatePresence>
       {open && (
         <>
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={onClose}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 300,
-              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-            }}
+          <div
           />
-          <motion.div
-            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-            transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-            style={{
-              position: 'fixed', top: 0, left: 0, bottom: 0,
-              width: 260, zIndex: 301,
-              background: 'var(--bg-2)',
-              borderRight: '1px solid var(--border)',
-              display: 'flex', flexDirection: 'column',
-              padding: '0 12px',
-            }}
-          >
+          <div>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '20px 12px 16px',
@@ -201,7 +166,7 @@ function MobileDrawer({ open, onClose }) {
               </button>
             </div>
             <NavLinks onClose={onClose} />
-          </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
