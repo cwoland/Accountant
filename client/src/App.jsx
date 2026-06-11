@@ -10,8 +10,6 @@ import ProfilePage        from './pages/ProfilePage';
 import AiPage             from './pages/AiPage';
 import AppLayout          from './components/layout/AppLayout';
 import NotFoundPage       from './pages/NotFoundPage';
-import WakeUpBanner       from './components/ui/WakeUpBanner';
-import InstallBanner      from './components/ui/InstallBanner';
 
 function PrivateRoute({ children }) {
   const token = useStore((s) => s.token);
@@ -26,8 +24,6 @@ function GuestRoute({ children }) {
 export default function App() {
   return (
     <>
-    <WakeUpBanner />
-    <InstallBanner />
     <BrowserRouter>
      <Routes>
       <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
