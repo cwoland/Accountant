@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { m, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Mail, Lock, TrendingUp, Wallet, PieChart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { loginApi } from '../../api/auth';
