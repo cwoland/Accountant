@@ -11,16 +11,17 @@ function PrivateRoute({ children }) {
 
 function GuestRoute({ children }) {
   const token = useStore((s) => s.token);
-  return !token ? children : <Navigate to="/login" replace />;
+  return !token ? children : <Navigate to="/" replace />;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/"         element={<div style={{ color: 'white', padding: 40 }}>Home</div>} />
+        <Route path="*"         element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
