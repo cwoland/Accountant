@@ -1,41 +1,58 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Server, X } from 'lucide-react';
+import { Server } from 'lucide-react';
 
 export default function WakeUpBanner() {
     const [status, setStatus] = useState('idle');
 
     useEffect(() => {
-  let timer;
-  const controller = new AbortController();
+    let wakeTimer;
+    let hideTimer;
+    const controller = new AbortController();
+    let shown = false;
 
-  const check = async () => {
-    try {
-      const start = Date.now();
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/health`,
-        { signal: controller.signal }
-      );
-      if (!res.ok) return;
-      const elapsed = Date.now() - start;
-      if (elapsed > 3000) {
-        setStatus('awake');
-        setTimeout(() => setStatus('idle'), 3000);
+    const check = async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/health`,
+          { signal: controller.signal }
+        );
+        if (res.ok) {
+          if (shown) {
+            setStatus('awake');
+            hideTimer = setTimeout(() => setStatus('idle'), 2500);
+          }
+        }
+      } catch {
+
       }
-    } catch {
-        
-    }
   };
 
-  timer = setTimeout(() => {
+  wakeTimer = setTimeout(() => {
+    shown = true;
     setStatus('waking');
-    check();
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(
+          `${import.meta.env.VITE_API_URL}/health`,
+          { signal: controller.signal }
+        );
+        if (res.ok) {
+          clearInterval(interval);
+          setStatus('awake');
+          hideTimer = setTimeout(() => setStatus('idle'), 2500);
+        }
+      } catch { }
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, 2000);
 
   check();
 
-  return () => {
-    clearTimeout(timer);
+  return() => {
+    clearTimeout(wakeTimer);
+    clearTimeout(hideTimer);
     controller.abort();
   };
 }, []);

@@ -5,18 +5,21 @@ import {
   LayoutDashboard, ArrowLeftRight, AlertCircle,
   ShoppingCart, Sparkles, User, LogOut, Wallet, Menu, X,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
+import { t } from 'i18next';
 
 const links = [
-  { to: '/',             icon: <LayoutDashboard size={18} />, label: 'Обзор' },
-  { to: '/transactions', icon: <ArrowLeftRight size={18} />,  label: 'Транзакции' },
-  { to: '/mandatory',    icon: <AlertCircle size={18} />,     label: 'Обязательные' },
-  { to: '/products',     icon: <ShoppingCart size={18} />,    label: 'Товары и услуги' },
-  { to: '/ai',           icon: <Sparkles size={18} />,        label: 'Cоветник' },
+  { to: '/',             icon: <LayoutDashboard size={18} />, label: t('nav.dashboard') },
+  { to: '/transactions', icon: <ArrowLeftRight size={18} />,  label: t('nav.transactions') },
+  { to: '/mandatory',    icon: <AlertCircle size={18} />,     label: t('nav.mandatory') },
+  { to: '/products',     icon: <ShoppingCart size={18} />,    label: t('nav.products') },
+  { to: '/ai',           icon: <Sparkles size={18} />,        label: t('nav.ai') },
 ];
 
 function NavLinks({ onClose }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout } = useStore();
 
@@ -99,7 +102,7 @@ function NavLinks({ onClose }) {
           onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.background = 'transparent'; }}
         >
           <LogOut size={18} />
-          Выйти
+          {t('nav.logout')}
         </button>
       </div>
     </>
