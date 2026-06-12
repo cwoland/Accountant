@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import useStore from './store/useStore';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+
 
 function PrivateRoute({ children }) {
   const token = useStore((s) => s.token);
@@ -8,14 +11,16 @@ function PrivateRoute({ children }) {
 
 function GuestRoute({ children }) {
   const token = useStore((s) => s.token);
-  return !token ? children : <Navigate to="/" replace />;
+  return !token ? children : <Navigate to="/login" replace />;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="*" element={<div style={{ color: 'white', padding: 40 }}>Router + Store works</div>} />
+         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );
