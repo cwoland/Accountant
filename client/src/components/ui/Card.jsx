@@ -8,7 +8,7 @@ export default function Card({ children, style, onClick, hover = false, glow = f
         style={{
             background: 'var(--surface)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-1)',
+            borderRadius: 'var(--radius-l)',
             padding: 24,
             boxShadow: glow ? 'var(--shadow-glow)' : 'var(--shadow-s)',
             cursor: onClick ? 'pointer' : 'default',
