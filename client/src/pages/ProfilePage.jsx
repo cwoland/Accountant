@@ -8,7 +8,6 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Card from '../components/ui/Card';
 import Select from '../components/ui/Select';
-import { useTranslation } from 'react-i18next';
 
 const FADE = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
@@ -22,14 +21,6 @@ const CURRENCIES = [
 const AVATARS = ['👤','😊','🧑‍💻','👨‍💼','👩‍💼','🧑‍🎓','🦊','🐼','🦁','🐯','🦅','🌟'];
 
 export default function ProfilePage() {
-  const { t, i18n } = useTranslation();
-  const [lang, setLang] = useState(i18n.language?.slice(0, 2) || 'ru');
-
-  const handleLangChange = (newLang) => {
-    setLang(newLang);
-    i18n.changeLanguage(newLang);
-  };
-
   const { user, setUser } = useStore();
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -306,38 +297,6 @@ export default function ProfilePage() {
           ))}
         </Card>
       </motion.div>
-      <motion.div variants={FADE}>
-  <Card style={{ padding: '18px 20px' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-      <div style={{
-        width: 36, height: 36, borderRadius: 'var(--radius-s)',
-        background: 'var(--accent-dim)', color: 'var(--accent-2)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        🌐
-      </div>
-      <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>Язык · Language</p>
-    </div>
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-      {[
-        { code: 'ru', label: '🇷🇺 Русский' },
-        { code: 'en', label: '🇬🇧 English' },
-      ].map((l) => (
-        <button key={l.code} onClick={() => handleLangChange(l.code)}
-          style={{
-            padding: '10px', borderRadius: 'var(--radius-m)', cursor: 'pointer',
-            fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '0.875rem',
-            transition: 'var(--transition)',
-            background: lang === l.code ? 'var(--accent-dim)' : 'var(--surface-2)',
-            color: lang === l.code ? 'var(--accent-2)' : 'var(--text-2)',
-            border: `1px solid ${lang === l.code ? 'var(--accent)' : 'var(--border)'}`,
-          }}>
-          {l.label}
-        </button>
-          ))}
-        </div>
-      </Card>
-     </motion.div>
     </motion.div>
   );
 }
