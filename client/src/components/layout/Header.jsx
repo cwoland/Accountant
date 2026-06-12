@@ -1,7 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import useStore from '../../store/useStore';
 
 export default function Header() {
@@ -11,18 +10,20 @@ export default function Header() {
     const page = titles[pathname] || { label: 'Accountant', sub: ''};
 
     const titles = {
-    '/':             { label: t('dashboard.title'),      sub: t('dashboard.subtitle') },
-    '/transactions': { label: t('transactions.title'),   sub: t('common.loading') },
-    '/mandatory':    { label: t('mandatory.title'),      sub: t('mandatory.subtitle') },
-    '/products':     { label: t('products.title'),       sub: t('products.subtitle') },
-    '/ai':           { label: t('ai.title'),             sub: t('ai.subtitle') },
-    '/profile':      { label: t('profile.title'),        sub: t('profile.subtitle') },
+    '/':             { label: 'Обзор',           sub: 'Сводка по финансам' },
+    '/transactions': { label: 'Транзакции',      sub: 'История операций' },
+    '/mandatory':    { label: 'Обязательные',    sub: 'Регулярные расходы' },
+    '/products':     { label: 'Товары и услуги', sub: 'Покупки и сервисы' },
+    '/ai':           { label: 'ИИ-советник',     sub: 'Анализ и рекомендации' },
+    '/profile':      { label: 'Профиль',         sub: 'Настройки аккаунта' },
     };
 
     const now = new Date();
     const hour = now.getHours();
-    const greeting = hour < 12 ? t('common.greeting.morning') : hour < 18 ? t('common.greeting.afternoon') : t('common.greeting.evening');
-
+    const greeting = hour < 12 ? 'Доброе утро'
+    : hour < 18 ? 'Добрый день'
+    : 'Добрый вечер';
+    
     return (
         <motion.header
         initial={{ y: -10, opacity: 0 }}

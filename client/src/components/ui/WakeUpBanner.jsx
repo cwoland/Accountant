@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Server } from 'lucide-react';
 
 export default function WakeUpBanner() {
-    const [status, setStatus] = useState('idle');
+  const [status, setStatus] = useState('idle');
 
-    useEffect(() => {
+  useEffect(() => {
     let wakeTimer;
     let hideTimer;
     const controller = new AbortController();
@@ -24,41 +24,41 @@ export default function WakeUpBanner() {
           }
         }
       } catch {
-
       }
-  };
+    };
 
-  wakeTimer = setTimeout(() => {
-    shown = true;
-    setStatus('waking');
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/health`,
-          { signal: controller.signal }
-        );
-        if (res.ok) {
-          clearInterval(interval);
-          setStatus('awake');
-          hideTimer = setTimeout(() => setStatus('idle'), 2500);
-        }
-      } catch { }
-    }, 3000);
+    wakeTimer = setTimeout(() => {
+      shown = true;
+      setStatus('waking');
 
-    return () => clearInterval(interval);
-  }, 2000);
+      const interval = setInterval(async () => {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/health`,
+            { signal: controller.signal }
+          );
+          if (res.ok) {
+            clearInterval(interval);
+            setStatus('awake');
+            hideTimer = setTimeout(() => setStatus('idle'), 2500);
+          }
+        } catch { }
+      }, 3000);
 
-  check();
+      return () => clearInterval(interval);
+    }, 2000);
 
-  return() => {
-    clearTimeout(wakeTimer);
-    clearTimeout(hideTimer);
-    controller.abort();
-  };
-}, []);
+    check();
 
-    return (
-        <AnimatePresence>
+    return () => {
+      clearTimeout(wakeTimer);
+      clearTimeout(hideTimer);
+      controller.abort();
+    };
+  }, []);
+
+  return (
+    <AnimatePresence>
       {status !== 'idle' && (
         <motion.div
           initial={{ opacity: 0, y: -60 }}
@@ -77,12 +77,13 @@ export default function WakeUpBanner() {
             backdropFilter: 'blur(12px)',
             boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
             maxWidth: 'calc(100vw - 32px)',
+            whiteSpace: 'nowrap',
           }}
         >
           {status === 'waking' ? (
             <>
               <div style={{
-                width: 18, height: 18, borderRadius: '50%',
+                width: 16, height: 16, borderRadius: '50%',
                 border: '2px solid var(--amber)',
                 borderTopColor: 'transparent',
                 animation: 'spin 0.8s linear infinite',
@@ -108,5 +109,5 @@ export default function WakeUpBanner() {
         </motion.div>
       )}
     </AnimatePresence>
-    );
+  );
 }
