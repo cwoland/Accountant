@@ -15,10 +15,8 @@ style.textContent = `
 document.head.appendChild(style);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
   <QueryClientProvider client={queryClient}>
     <App />
     <Toaster />
   </QueryClientProvider>
-  </React.StrictMode>
 );
