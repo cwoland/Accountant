@@ -4,7 +4,6 @@ import { Bell } from 'lucide-react';
 import useStore from '../../store/useStore';
 
 export default function Header() {
-    const { t } = useTranslation();
     const { pathname } = useLocation();
     const user = useStore((s) => s.user);
     const page = titles[pathname] || { label: 'Accountant', sub: ''};

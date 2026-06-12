@@ -8,17 +8,17 @@ import {
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 
-function NavLinks({ onClose }) {
-  const navigate = useNavigate();
-  const { user, logout } = useStore();
-
-  const links = [
+const links = [
     { to: '/',             icon: <LayoutDashboard size={18} />, label: 'Обзор' },
     { to: '/transactions', icon: <ArrowLeftRight size={18} />,  label: 'Транзакции' },
     { to: '/mandatory',    icon: <AlertCircle size={18} />,     label: 'Обязательные' },
     { to: '/products',     icon: <ShoppingCart size={18} />,    label: 'Товары и услуги' },
     { to: '/ai',           icon: <Sparkles size={18} />,        label: 'Советник' },
-  ];
+];
+
+function NavLinks({ onClose }) {
+  const navigate = useNavigate();
+  const { user, logout } = useStore();
 
   const handleLogout = () => {
     logout();
