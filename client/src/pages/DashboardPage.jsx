@@ -22,7 +22,6 @@ const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
 };
-const navigate = useNavigate();
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -42,6 +41,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const user = useStore((s) => s.user);
   const [monthOffset] = useState(0);
   const range = getMonthRange(monthOffset);
