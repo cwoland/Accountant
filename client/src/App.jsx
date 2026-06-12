@@ -3,6 +3,7 @@ import useStore from './store/useStore';
 
 import LoginPage     from './pages/auth/LoginPage';
 import RegisterPage  from './pages/auth/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
 import AppLayout     from './components/layout/AppLayout';
 
 function PrivateRoute({ children }) {
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
 
         <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
+          <Route path="/" element={<DashboardPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />
