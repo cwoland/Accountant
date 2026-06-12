@@ -18,6 +18,10 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+console.log('React version:', React.version);
+console.log('React instance:', React);
+console.log('Has dispatcher:', !!React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher);
+
 ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <App />
