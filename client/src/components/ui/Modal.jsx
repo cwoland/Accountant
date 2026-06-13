@@ -33,9 +33,10 @@ export default function Modal({ open, onClose, title, children, width = 480 }) {
                 style={{
                     position: 'fixed', top: '50%', left: '50%', zIndex: 201,
                     transform: 'translate(-50%, -50%)',
-                    width: 'calc(100% - 32px)', 
+                    width: 'calc(100vw - 32px)',
                     maxWidth: width,
-                    background: '1px solid var(--border-2)',
+                    background: 'var(--bg-3)',
+                    border: '1px solid var(--border-2)',
                     borderRadius: 'var(--radius-xl)',
                     padding: '28px 28px 24px',
                     boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
