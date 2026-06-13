@@ -132,6 +132,16 @@ function DesktopSidebar() {
 }
 
 function MobileDrawer({ open, onClose }) {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+
   return (
     <AnimatePresence>
       {open && (
