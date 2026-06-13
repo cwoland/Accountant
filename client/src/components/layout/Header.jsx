@@ -6,7 +6,6 @@ import useStore from '../../store/useStore';
 export default function Header() {
     const { pathname } = useLocation();
     const user = useStore((s) => s.user);
-    const page = titles[pathname] || { label: 'Accountant', sub: ''};
 
     const titles = {
     '/':             { label: 'Обзор',           sub: 'Сводка по финансам' },
@@ -17,6 +16,7 @@ export default function Header() {
     '/profile':      { label: 'Профиль',         sub: 'Настройки аккаунта' },
     };
 
+    const page = titles[pathname] || { label: 'Accountant', sub: ''};
     const now = new Date();
     const hour = now.getHours();
     const greeting = hour < 12 ? 'Доброе утро'

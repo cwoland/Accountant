@@ -45,6 +45,13 @@ export default function DashboardPage() {
   const user = useStore((s) => s.user);
   const [monthOffset] = useState(0);
   const range = getMonthRange(monthOffset);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['stats', range],
@@ -110,7 +117,8 @@ export default function DashboardPage() {
     <motion.div variants={container} initial="hidden" animate="show"
       style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16,
+       }}>
         {statCards.map((c, i) => (
           <motion.div key={i} variants={FADE}>
             <Card glow={c.glow} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -169,7 +177,7 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 16 }}>
         <motion.div variants={FADE}>
           <Card style={{ padding: '24px 20px' }}>
             <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 20 }}>

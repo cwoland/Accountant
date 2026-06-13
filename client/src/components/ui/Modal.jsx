@@ -33,12 +33,14 @@ export default function Modal({ open, onClose, title, children, width = 480 }) {
                 style={{
                     position: 'fixed', top: '50%', left: '50%', zIndex: 201,
                     transform: 'translate(-50%, -50%)',
-                    width: '100%', maxWidth: width,
+                    width: 'calc(100% - 32px)', 
+                    maxWidth: width,
                     background: '1px solid var(--border-2)',
                     borderRadius: 'var(--radius-xl)',
                     padding: '28px 28px 24px',
                     boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
-                    maxHeight: '90vh', overflowY: 'auto',
+                    maxHeight: '85vh', overflowY: 'auto',
+                    WebKitOverflowScrolling: 'touch',
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                         <h3 style={{ fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.02em' }}>{title}</h3>

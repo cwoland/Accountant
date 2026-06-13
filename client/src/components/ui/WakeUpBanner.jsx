@@ -8,6 +8,7 @@ export default function WakeUpBanner() {
   useEffect(() => {
     let wakeTimer;
     let hideTimer;
+    let interval;
     const controller = new AbortController();
     let shown = false;
 
@@ -17,11 +18,9 @@ export default function WakeUpBanner() {
           `${import.meta.env.VITE_API_URL}/health`,
           { signal: controller.signal }
         );
-        if (res.ok) {
-          if (shown) {
-            setStatus('awake');
-            hideTimer = setTimeout(() => setStatus('idle'), 2500);
-          }
+        if (res.ok && shown) {
+          setStatus('awake');
+          hideTimer = setTimeout(() => setStatus('idle'), 2500);
         }
       } catch {
       }
@@ -30,8 +29,8 @@ export default function WakeUpBanner() {
     wakeTimer = setTimeout(() => {
       shown = true;
       setStatus('waking');
-
-      const interval = setInterval(async () => {
+      
+      interval = setInterval(async () => {
         try {
           const res = await fetch(
             `${import.meta.env.VITE_API_URL}/health`,
@@ -44,8 +43,6 @@ export default function WakeUpBanner() {
           }
         } catch { }
       }, 3000);
-
-      return () => clearInterval(interval);
     }, 2000);
 
     check();
@@ -53,6 +50,7 @@ export default function WakeUpBanner() {
     return () => {
       clearTimeout(wakeTimer);
       clearTimeout(hideTimer);
+      clearInterval(interval);
       controller.abort();
     };
   }, []);

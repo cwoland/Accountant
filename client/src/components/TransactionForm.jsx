@@ -49,6 +49,7 @@ export default function TransactionForm({ initial, onSubmit, loading }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (loading) return;
     if (!form.amount || !form.category)
       return toast.error('Заполните сумму и категорию');
     onSubmit({
