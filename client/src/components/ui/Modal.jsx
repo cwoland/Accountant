@@ -26,21 +26,28 @@ export default function Modal({ open, onClose, title, children, width = 480 }) {
                     background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
                 }} />
                 <motion.div
-                initial={{ opacity: 0, scale: 0.94, y: 16 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.94, y: 16 }}
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 style={{
-                    position: 'fixed', top: '50%', left: '50%', zIndex: 201,
-                    transform: 'translate(-50%, -50%)',
+                    position: 'fixed', 
+                    top: 0, 
+                    left: 0, 
+                    right: 0, 
+                    bottom: 0, 
+                    margin: 'auto', 
+                    zIndex: 201,
                     width: 'calc(100vw - 32px)',
                     maxWidth: width,
+                    height: 'fit-content',
                     background: 'var(--bg-3)',
                     border: '1px solid var(--border-2)',
                     borderRadius: 'var(--radius-xl)',
                     padding: '28px 28px 24px',
                     boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
-                    maxHeight: '85vh', overflowY: 'auto',
+                    maxHeight: '85vh', 
+                    overflowY: 'auto',
                     WebKitOverflowScrolling: 'touch',
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
