@@ -33,12 +33,6 @@ export default function TransactionsPage() {
     ...(catFilter && { category: catFilter }),
   };
 
-  const create = useMutation({
-    mutationFn: createTransactionApi,
-    onSuccess: () => { toast.success('Транзакция добавлена'); invalidate(); },
-    onError: (e) => toast.error(e.response?.data?.message || 'Ошибка'),
-  });
-
   const { transactions, pagination, isLoading, create, update, remove } = useTransactions(params);
   const { categories } = useCategories();
 
