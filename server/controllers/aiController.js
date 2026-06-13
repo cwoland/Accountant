@@ -10,10 +10,14 @@ const callAI = async (messages) => {
       'HTTP-Referer': 'https://accountant-bay.vercel.app',
       'X-Title': 'Accountant App',
     },
-    body: JSON.stringify({ model: MODEL, messages, max_tokens: 500 }),
+    body: JSON.stringify({ model: MODEL, messages, max_tokens: 600 }),
   });
 
-  if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`OpenRouter error: ${res.status} — ${errText}`);
+  }
+
   const data = await res.json();
   return data.choices[0].message.content;
 };
@@ -22,14 +26,14 @@ export const analyzeExpenses = async (req, res, next) => {
   try {
     const { stats, currency = 'RUB' } = req.body;
 
-    const prompt = `Ты финансовый советник. Проанализируй расходы пользователя и дай краткий анализ (3-4 предложения) на русском языке.
+    const prompt = `Ты финансовый советник. Проанализируй расходы пользователя кратко (3-4 предложения) на русском языке.
 Данные за период:
 - Доходы: ${stats.income} ${currency}
 - Расходы: ${stats.expense} ${currency}
 - Баланс: ${stats.balance} ${currency}
 - По категориям: ${JSON.stringify(stats.byCategory?.filter(c => c.type === 'expense').slice(0, 5))}
 
-Укажи: на что тратится больше всего, здоров ли баланс, и одну конкретную рекомендацию.`;
+Укажи: на что тратится больше всего, здоров ли баланс, одну конкретную рекомендацию.`;
 
     const text = await callAI([{ role: 'user', content: prompt }]);
     res.json({ text });
@@ -40,14 +44,26 @@ export const analyzeExpenses = async (req, res, next) => {
 
 export const getBudgetAdvice = async (req, res, next) => {
   try {
-    const { income, expense, monthlyBudget, currency = 'RUB' } = req.body;
+    const { income, expense, monthlyBudget, currency = 'RUB', customQuestion } = req.body;
 
-    const prompt = `Ты финансовый советник. Пользователь имеет:
+    let prompt;
+
+    if (customQuestion) {
+      prompt = `Ты финансовый советник. Отвечай кратко и по делу на русском языке.
+Контекст пользователя:
+- Доход: ${income} ${currency}
+- Расходы: ${expense} ${currency}
+- Бюджет: ${monthlyBudget} ${currency}
+
+Вопрос пользователя: ${customQuestion}`;
+    } else {
+      prompt = `Ты финансовый советник. Пользователь имеет:
 - Ежемесячный доход: ${income} ${currency}
 - Ежемесячные расходы: ${expense} ${currency}
 - Установленный бюджет: ${monthlyBudget} ${currency}
 
 Дай 3 конкретных совета по оптимизации бюджета на русском языке. Ответ в формате нумерованного списка.`;
+    }
 
     const text = await callAI([{ role: 'user', content: prompt }]);
     res.json({ text });

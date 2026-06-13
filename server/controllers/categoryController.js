@@ -4,7 +4,9 @@ export const getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find({
       $or: [{ user: req.user._id }, { isSystem: true }],
-    }).sort({ isSystem: -1, name: 1 });
+    });
+
+    console.log('Categories found:', categories.length);
 
     res.json(categories);
   } catch (err) {

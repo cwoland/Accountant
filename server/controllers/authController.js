@@ -8,8 +8,6 @@ export const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
-    console.log('DESTRUCTURED → name:', name, '| email:', email, '| pass:', !!password);
-
     if (!name?.trim() || !email?.trim() || !password)
       return res.status(400).json({ message: 'Заполните все поля.' });
 
