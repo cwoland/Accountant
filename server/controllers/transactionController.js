@@ -2,11 +2,6 @@ import Transaction from '../models/Transaction.js';
 
 export const getTransactions = async (req, res, next) => {
   try {
-    const {
-      type, category, startDate, endDate,
-      page = 1, limit = 20, sortBy = 'date', order = 'desc',
-    } = req.query;
-
     const { type, category, startDate, endDate, page = 1,
       limit = 20, sortBy = 'date', order = 'desc', accountId } = req.query;
 
