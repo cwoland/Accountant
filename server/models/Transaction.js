@@ -8,7 +8,7 @@ const transactionSchema = new mongoose.Schema(
             required: true,
         },
         account: {
-            type: mongoose.Schema.Types.Array.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Account',
             default: null,
         },
