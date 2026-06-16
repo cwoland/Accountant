@@ -6,6 +6,7 @@ import InstallBanner from './components/ui/InstallBanner';
 import LoginPage        from './pages/auth/LoginPage';
 import RegisterPage     from './pages/auth/RegisterPage';
 import DashboardPage    from './pages/DashboardPage';
+import AccountsPage     from './pages/AccountsPage';
 import TransactionsPage from './pages/TransactionsPage';
 import MandatoryPage    from './pages/MandatoryPage';
 import ProductsPage     from './pages/ProductsPage';
@@ -35,6 +36,7 @@ export default function App() {
 
         <Route element={<PrivateRoute><AppLayout /></PrivateRoute>}>
           <Route path="/"             element={<DashboardPage />} />
+          <Route path="/accounts"     element={<AccountsPage />} />
           <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/mandatory"    element={<MandatoryPage />} />
           <Route path="/products"     element={<ProductsPage />} />

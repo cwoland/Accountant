@@ -20,6 +20,10 @@ const categorySchema = new mongoose.Schema(
         },
         icon: {
             type: String,
+            default: '💰',
+        },
+        color: {
+            type: String,
             default: '#6366f1',
         },
         isMandatory: {
@@ -30,6 +34,7 @@ const categorySchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        hiddenFor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
     },
     { timestamps: true }
 );

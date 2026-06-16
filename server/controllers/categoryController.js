@@ -4,9 +4,8 @@ export const getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find({
       $or: [{ user: req.user._id }, { isSystem: true }],
-    });
-
-    console.log('Categories found:', categories.length);
+      hiddenFor: { $ne: req.user._id },
+    }).sort({ isSystem: -1, name: 1 });
 
     res.json(categories);
   } catch (err) {
@@ -79,6 +78,31 @@ export const deleteCategory = async (req, res, next) => {
 
     await category.deleteOne();
     res.json({ message: 'Категория удалена.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const hideCategory = async (req, res, next) => {
+  try {
+    const category = await Category.findById(req.params.id);
+
+    if (!category)
+      return res.status(404).json({ message: 'Категория не найдена.' });
+
+    if (!category.isSystem)
+      return res.status(400).json({ message: 'Скрыть можно только системные категории.' });
+
+    const alreadyHidden = category.hiddenFor.some(
+      (id) => id.toString() === req.user._id.toString()
+    );
+
+    if (!alreadyHidden) {
+      category.hiddenFor.push(req.user._id);
+      await category.save();
+    }
+
+    res.json({ message: 'Категория скрыта.' });
   } catch (err) {
     next(err);
   }

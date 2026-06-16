@@ -7,9 +7,11 @@ import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 
 import authRoutes from './routes/auth.js';
+import accountRoutes from './routes/accounts.js';
 import transactionRoutes from './routes/transactions.js';
 import categoryRoutes from './routes/categories.js';
 import aiRoutes from './routes/ai.js';
+import debtRoutes from './routes/debts.js';
 
 dotenv.config();
 connectDB();
@@ -23,9 +25,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/accounts', accountRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/debts', debtRoutes);
+
 
 app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });

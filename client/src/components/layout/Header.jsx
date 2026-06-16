@@ -1,3 +1,6 @@
+import { useState } from '../../store/useStore';
+import { useQuery } from '@tanstack/react-query';
+import { getAccountsApi } from '../../api/accounts';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
@@ -6,9 +9,17 @@ import useStore from '../../store/useStore';
 export default function Header() {
     const { pathname } = useLocation();
     const user = useStore((s) => s.user);
+    const { activeAccountId } = useStore();
+    const { data: accounts = [] } = useQuery({
+        queryKey: ['accounts'],
+        queryFn: () => getAccountsApi().then((r) => r.data),
+        enabled: !!activeAccountId,
+    });
+    const activeAccount = accounts.find((a) => a._id === activeAccountId);
 
     const titles = {
     '/':             { label: 'Обзор',           sub: 'Сводка по финансам' },
+    '/accounts':     { label: 'Счета',           sub: 'Личный и совместные' },
     '/transactions': { label: 'Транзакции',      sub: 'История операций' },
     '/mandatory':    { label: 'Обязательные',    sub: 'Регулярные расходы' },
     '/products':     { label: 'Товары и услуги', sub: 'Покупки и сервисы' },
@@ -49,6 +60,21 @@ export default function Header() {
                     {page.sub}
                 </p>
             </div>
+
+            {activeAccount && (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '4px 12px',
+                    borderRadius: 99,
+                    background: `${activeAccount.color}20`,
+                    border: `1px solid ${activeAccount.color}50`,
+                }}>
+                    <span style={{ fontSize: '0.9rem' }}>{activeAccount.icon}</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600, color: activeAccount.color }}>{activeAccount.name}</span>
+                </div>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <p style={{ fontSize: '0.82rem', color: 'var(--text-2)' }}>

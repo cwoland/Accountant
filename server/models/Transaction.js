@@ -7,6 +7,11 @@ const transactionSchema = new mongoose.Schema(
             ref: 'User',
             required: true,
         },
+        account: {
+            type: mongoose.Schema.Types.Array.ObjectId,
+            ref: 'Account',
+            default: null,
+        },
         type: {
             type: String,
             enum: ['income', 'expense'],

@@ -13,29 +13,24 @@ export default function AppLayout() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  if (isMobile) {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '-webkit-fill-available',
-        background: 'var(--bg)',
-        position: 'relative',
+if (isMobile) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column',
+      minHeight: '-webkit-fill-available',
+      background: 'var(--bg)', position: 'relative',
+    }}>
+      <div className="mesh-bg"><span /><span /><span /></div>
+      <Sidebar />
+      <main style={{
+        flex: 1, padding: '20px 16px 32px',
+        overflowY: 'auto', position: 'relative', zIndex: 1,
       }}>
-        <div className="mesh-bg"><span /><span /><span /></div>
-        <Sidebar />
-        <main style={{
-          flex: 1,
-          padding: '20px 16px 32px',
-          overflowY: 'auto',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          <Outlet />
-        </main>
-      </div>
-    );
-  }
+        <Outlet />
+      </main>
+    </div>
+  );
+}
 
   return (
     <div className="app-shell">

@@ -7,7 +7,10 @@ export const getTransactions = async (req, res, next) => {
       page = 1, limit = 20, sortBy = 'date', order = 'desc',
     } = req.query;
 
-    const filter = { user: req.user._id };
+    const { type, category, startDate, endDate, page = 1,
+      limit = 20, sortBy = 'date', order = 'desc', accountId } = req.query;
+
+    const filter = accountId ? { account: accountId } : { user: req.user._id, account: null };
     if (type) filter.type = type;
     if (category) filter.category = category;
     if (startDate || endDate) {
@@ -119,14 +122,24 @@ export const getStats = async (req, res, next) => {
 
 export const createTransaction = async (req, res, next) => {
   try {
-    const { type, amount, category, description, date, isRecurring, recurringPeriod, tags } =
+    const { type, amount, category, description, date, isRecurring, recurringPeriod, tags, accountId } =
       req.body;
+
+    if (accountId) {
+      const Account = (await import('../models/Account.js')).default;
+      const account = await Account.findById(accountId);
+      if (!account) return res.status(404).json({ message: 'Счёт не найден.' });
+      const hasAccess = account.owner.toString() === req.user._id.toString() || 
+      account.members.some(m => m.user.toString() === req.user._id.toString() && m.status === 'active');
+      if (!hasAccess) return res.status(403).json({ message: 'Нет доступа к счёту.' });
+    }
 
     if (!type || !amount || !category)
       return res.status(400).json({ message: 'Тип, сумма и категория обязательны.' });
 
     const transaction = await Transaction.create({
       user: req.user._id,
+      account: accountId || null,
       type,
       amount,
       category,

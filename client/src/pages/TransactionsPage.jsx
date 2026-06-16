@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Pencil, Filter, ArrowUpRight, ArrowDownRight, Search } from 'lucide-react';
+import { Plus, Trash2, Pencil, Filter, ArrowUpRight, ArrowDownRight, Search, Receipt } from 'lucide-react';
 import useTransactions from '../hooks/useTransactions';
 import useCategories from '../hooks/useCategories';
 import useStore from '../store/useStore';
@@ -134,7 +134,7 @@ export default function TransactionsPage() {
             {filtered.length === 0 ? (
               <div style={{ padding: '16px 0' }}>
                 <EmptyState
-                 icon="🧾"
+                 icon={<Receipt size={24} color="var(--text-3)" />}
                  title={search || typeFilter || catFilter
                  ? 'Ничего не найдено'
                  : 'Транзакций пока нет'}

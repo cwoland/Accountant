@@ -26,7 +26,7 @@ export default function EmptyState({
           background: 'var(--surface-2)',
           border: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '2.2rem',
+          fontSize: typeof icon === 'string' ? '2.2rem' : undefined,
           marginBottom: 8,
         }}
       >

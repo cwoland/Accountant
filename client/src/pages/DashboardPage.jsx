@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, Wallet, ArrowUpRight,
-  ArrowDownRight, Sparkles,
+  ArrowDownRight, Sparkles, BarChart2, Receipt, Lightbulb, PieChart as PieChartIcon
 } from 'lucide-react';
 import {
   AreaChart, Area, PieChart, Pie, Cell,
@@ -22,6 +22,19 @@ const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
 };
+
+const FACTS = [
+  'Правило 50/30/20: 50% дохода — на нужды, 30% — на желания, 20% — на сбережения.',
+  'Сложный процент Эйнштейн называл восьмым чудом света.',
+  'Откладывая 10% дохода ежемесячно, за 10 лет можно накопить годовой доход.',
+  'Средний миллионер имеет 7 источников дохода.',
+  'Финансовая подушка безопасности — 3-6 месяцев расходов на счёте.',
+  'Инфляция в 7% уменьшает покупательную способность денег вдвое за 10 лет.',
+  'Инвестируя $100 в месяц под 10% годовых, через 30 лет получите $226 000.',
+  'Богатые люди покупают активы. Бедные — пассивы, думая что это активы.',
+  'Средний человек тратит на кофе $1 100 в год. Инвестиция этой суммы под 7% — $83 000 за 30 лет.',
+  'Первое правило инвестирования: никогда не теряй деньги. Второе — помни о первом.',
+];
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -46,6 +59,7 @@ export default function DashboardPage() {
   const [monthOffset] = useState(0);
   const range = getMonthRange(monthOffset);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [fact] = useState(() => FACTS[Math.floor(Math.random() * FACTS.length)]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -114,11 +128,37 @@ export default function DashboardPage() {
   ];
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show"
-      style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <motion.div variants={container} initial="hidden" animate="show"
+    style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16,
-       }}>
+    <motion.div variants={FADE}>
+      <Card style={{
+        background: 'linear-gradient(135deg, var(--accent-dim), var(--surface))',
+        border: '1px solid rgba(124,106,247,0.2)',
+        padding: '16px 20px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 'var(--radius-s)',
+            background: 'var(--accent)', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Lightbulb size={18} color="#fff" />
+          </div>
+          <div>
+            <p style={{ fontSize: '0.72rem', color: 'var(--accent-2)', fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
+              fontFamily: 'var(--font-display)' }}>
+              Факт дня
+            </p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', lineHeight: 1.6 }}>
+              {fact}
+            </p>
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>    
         {statCards.map((c, i) => (
           <motion.div key={i} variants={FADE}>
             <Card glow={c.glow} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -185,7 +225,7 @@ export default function DashboardPage() {
             </p>
             {chartData.length === 0
               ? <EmptyState 
-              icon="📊"
+              icon={<BarChart2 size={32} color="var(--text-3)" />}
               title="Нет данных за период"
               description="Добавьте транзакции — и здесь появится динамика доходов и расходов по месяцам."
                />
@@ -223,7 +263,7 @@ export default function DashboardPage() {
             </p>
             {expenseCats.length === 0
               ? <EmptyState
-              icon="🥧"
+              icon={<PieChartIcon size={32} color="var(--text-3)" />}
               title="Нет расходов"
               description="Данные по категориям появятся после первых трат."
                />
@@ -275,7 +315,7 @@ export default function DashboardPage() {
             ? <Loader size={24} />
             : txData?.transactions?.length === 0
               ? <EmptyState
-              icon="💸"
+              icon={<Receipt size={32} color="var(--text-3)" />}
               title="Транзакций пока нет"
               description="Добавьте первый доход или расход — и здесь появится история операций с графиками и аналитикой."
               action={() => navigate('/transactions')}

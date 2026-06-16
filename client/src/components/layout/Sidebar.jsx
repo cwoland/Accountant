@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, ArrowLeftRight, AlertCircle,
-  ShoppingCart, Sparkles, User, LogOut, Wallet, Menu, X,
+  ShoppingCart, Sparkles, User, Users, LogOut, Wallet, Menu, X,
 } from 'lucide-react';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 
 const links = [
     { to: '/',             icon: <LayoutDashboard size={18} />, label: 'Обзор' },
+    { to: '/accounts',     icon: <Users size={18} />,           label: 'Счета' },
     { to: '/transactions', icon: <ArrowLeftRight size={18} />,  label: 'Транзакции' },
     { to: '/mandatory',    icon: <AlertCircle size={18} />,     label: 'Обязательные' },
     { to: '/products',     icon: <ShoppingCart size={18} />,    label: 'Товары и услуги' },
@@ -108,8 +109,17 @@ function NavLinks({ onClose }) {
 
 function DesktopSidebar() {
   return (
-    <aside
+    <aside style={{
+      gridColumn: 1, gridRow: '1 / 3',
+      background: 'var(--bg-2)',
+      borderRight: '1px solid var(--border)',
+      display: 'flex', flexDirection: 'column',
+      padding: '0 12px',
+      position: 'sticky', top: 0,
+      height: '100vh', zIndex: 100,
+    }}
     >
+      <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '24px 12px 20px',
@@ -126,6 +136,7 @@ function DesktopSidebar() {
           Accountant
         </span>
       </div>
+      </Link>
       <NavLinks />
     </aside>
   );
@@ -133,22 +144,34 @@ function DesktopSidebar() {
 
 function MobileDrawer({ open, onClose }) {
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [open]);
-
 
   return (
     <AnimatePresence>
       {open && (
         <>
-          <div
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 300,
+              background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+            }}
           />
-          <div>
+          <motion.div
+            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+            style={{
+              position: 'fixed', top: 0, left: 0, bottom: 0,
+              width: '75vw', maxWidth: 280, zIndex: 301,
+              background: 'var(--bg-2)',
+              borderRight: '1px solid var(--border)',
+              display: 'flex', flexDirection: 'column',
+              padding: '0 12px', overflow: 'hidden',
+            }}
+          >
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               padding: '20px 12px 16px',
@@ -162,21 +185,20 @@ function MobileDrawer({ open, onClose }) {
                 }}>
                   <Wallet size={16} color="#fff" />
                 </div>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.03em' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem' }}>
                   Accountant
                 </span>
               </div>
               <button onClick={onClose} style={{
                 width: 32, height: 32, borderRadius: 'var(--radius-s)',
                 background: 'var(--surface)', color: 'var(--text-2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
               }}>
                 <X size={16} />
               </button>
             </div>
             <NavLinks onClose={onClose} />
-          </div>
+          </motion.div>
         </>
       )}
     </AnimatePresence>
@@ -190,8 +212,11 @@ export function MobileTopBar({ onOpen }) {
       padding: '0 16px', height: 'var(--header-h)',
       background: 'var(--bg)', borderBottom: '1px solid var(--border)',
       position: 'sticky', top: 0, zIndex: 200,
+      width: '100%', overflow: 'hidden',
+      boxSizing: 'border-box',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{
           width: 30, height: 30, background: 'var(--accent)',
           borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -202,6 +227,7 @@ export function MobileTopBar({ onOpen }) {
         <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.03em' }}>
           Accountant
         </span>
+        </Link>
       </div>
       <button onClick={onOpen} style={{
         width: 36, height: 36, borderRadius: 'var(--radius-m)',
