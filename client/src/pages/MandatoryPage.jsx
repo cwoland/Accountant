@@ -141,7 +141,7 @@ return (
                     }}>{cat.icon}</div>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontWeight: 600, fontSize: '0.9rem',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {cat.name}
                       </p>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 2 }}>
