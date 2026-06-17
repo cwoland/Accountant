@@ -47,7 +47,6 @@ export default function Modal({ open, onClose, title, children, width = 480 }) {
                     borderRadius: 'var(--radius-xl)',
                     padding: '28px 28px 24px',
                     boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
-                    maxHeight: '85vh', 
                     overflowY: 'auto',
                     WebKitOverflowScrolling: 'touch',
                 }}>
