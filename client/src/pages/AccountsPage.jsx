@@ -32,6 +32,7 @@ export default function AccountsPage() {
     const { data: invites = [] } = useQuery({
         queryKey: ['invites'],
         queryFn: () => getInvitesApi().then((r) => r.data),
+        refetchInterval: 30000,
     });
 
     const invalidate = () => {
@@ -58,7 +59,7 @@ export default function AccountsPage() {
 
     const leave = useMutation({
         mutationFn: leaveAccountApi,
-        onSuccess: () => { toast.success('Вы покинули счёт'); setActiveAccount: null, invalidate(); },
+        onSuccess: () => { toast.success('Вы покинули счёт'); setActiveAccount: null; invalidate(); },
     });
 
     const remove = useMutation({

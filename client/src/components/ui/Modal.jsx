@@ -40,14 +40,15 @@ export default function Modal({ open, onClose, title, children, width = 480 }) {
                     zIndex: 201,
                     width: 'calc(100vw - 32px)',
                     maxWidth: width,
-                    height: 'fit-content',
+                    height: 'auto',
+                    maxHeight: '80vh',
                     background: 'var(--bg-3)',
                     border: '1px solid var(--border-2)',
                     borderRadius: 'var(--radius-xl)',
                     padding: '28px 28px 24px',
                     boxShadow: '0 24px 80px rgba(0,0,0,0.7)',
                     maxHeight: '85vh', 
-                    overflowY: 'hidden',
+                    overflowY: 'auto',
                     WebKitOverflowScrolling: 'touch',
                 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>

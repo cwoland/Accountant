@@ -86,9 +86,9 @@ export default function ProductsPage() {
         ))}
       </div>
 
-      <Card style={{ padding: '14px 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+      <Card style={{ padding: '14px 20px', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', flexWrap: 'nowrap', paddingBottom: 2 }}>
             {tabs.map((t) => (
               <button key={t.id} onClick={() => setTab(t.id)}
                 style={{
@@ -99,6 +99,7 @@ export default function ProductsPage() {
                   fontSize: '0.82rem', fontWeight: 600,
                   fontFamily: 'var(--font-display)', transition: 'var(--transition)',
                   border: 'none',
+                  flexShrink: 0,
                 }}>
                 {t.icon}{t.label}
                 <span style={{

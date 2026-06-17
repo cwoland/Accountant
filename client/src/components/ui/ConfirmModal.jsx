@@ -18,14 +18,18 @@ export default function ConfirmModal({ open, onConfirm, onCancel, title, message
             }}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 16 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             style={{
-              position: 'fixed', top: '50%', left: '50%', zIndex: 201,
-              transform: 'translate(-50%, -50%)',
-              width: '100%', maxWidth: 380,
+              position: 'fixed', 
+              top: '50%', 
+              left: '50%', 
+              zIndex: 201,
+              width: 'calc(100vw - 32px)', 
+              maxWidth: 380,
+              height: 'auto',
               background: 'var(--bg-3)',
               border: '1px solid var(--border-2)',
               borderRadius: 'var(--radius-xl)',
