@@ -24,12 +24,12 @@ export default function ConfirmModal({ open, onConfirm, onCancel, title, message
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             style={{
               position: 'fixed', 
-              top: '50%', 
-              left: '50%', 
+              inset: 0,
+              margin: 'auto',
               zIndex: 201,
               width: 'calc(100vw - 32px)', 
               maxWidth: 380,
-              height: 'auto',
+              height: 'fit-content',
               background: 'var(--bg-3)',
               border: '1px solid var(--border-2)',
               borderRadius: 'var(--radius-xl)',
