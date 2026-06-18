@@ -23,6 +23,7 @@ export default function Header() {
     '/transactions': { label: 'Транзакции',      sub: 'История операций' },
     '/mandatory':    { label: 'Обязательные',    sub: 'Регулярные расходы' },
     '/products':     { label: 'Товары и услуги', sub: 'Покупки и сервисы' },
+    '/debts':        { label: 'Долги',           sub: 'Контроль долгов и займов' },
     '/ai':           { label: 'ИИ-советник',     sub: 'Анализ и рекомендации' },
     '/profile':      { label: 'Профиль',         sub: 'Настройки аккаунта' },
     };

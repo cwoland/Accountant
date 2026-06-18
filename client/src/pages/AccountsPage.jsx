@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Users, Check, X, LogOut, Trash2, Crown, Clock } from 'lucide-react';
@@ -7,12 +7,15 @@ import {
     getAccountsApi, getInvitesApi, createAccountApi,
     acceptInviteApi, declineInviteApi, leaveAccountApi, deleteAccountApi,
 } from '../api/accounts';
+import { searchUsersApi } from '../api/users';
+import useAccountChat from '../hooks/useAccountChat';
 import useStore from '../store/useStore';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
+import AccountChat from '../components/AccountChat';
 import Loader from '../components/ui/Loader';
 import EmptyState from '../components/ui/EmptyState';
 
@@ -23,6 +26,10 @@ export default function AccountsPage() {
     const qc = useQueryClient();
     const [modal, setModal] = useState(false);
     const [form, setForm] = useState({ name: '', inviteEmail: '' });
+    const [userSearch, setUserSearch] = useState('');
+    const [userResults, setUserResults] = useState([]);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const searchTimer = useRef(null);
 
     const { data: accounts = [], isLoading } = useQuery({
         queryKey: ['accounts'],
@@ -68,6 +75,20 @@ export default function AccountsPage() {
     });
 
     const isOwner = (acc) => acc.owner._id === user?._id || acc.owner === user?._id;
+
+    useEffect(() => {
+      if (!userSearch || userSearch.length < 2) { setUserResults([]); return; }
+      clearTimeout(searchTimer.current);
+      searchTimer.current = setTimeout(async () => {
+        setSearchLoading(true);
+        try {
+          const { data } = await searchUsersApi(userSearch);
+          setUserResults(data);
+        } catch {}
+        finally { setSearchLoading(false); }
+      }, 400);
+      return () => clearTimeout(searchTimer.current);
+    }, [userSearch]);
 
     return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -196,7 +217,6 @@ export default function AccountsPage() {
                             {owner && <Badge color="amber" size="sm"><Crown size={10} /> Владелец</Badge>}
                           </div>
 
-                          {/* Участники */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <div style={{
@@ -274,37 +294,102 @@ export default function AccountsPage() {
                   </motion.div>
                 );
               })}
+              {activeAccountId && <AccountChat accountId={activeAccountId} accounts={accounts} />}
             </div>
       )}
 
-       <Modal open={modal} onClose={() => setModal(false)} title="Создать совместный счёт">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Input
-            label="Название счёта"
-            placeholder="Семейный бюджет"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
-          <Input
-            label="Email участника"
-            type="email"
-            placeholder="partner@example.com"
-            value={form.inviteEmail}
-            onChange={(e) => setForm({ ...form, inviteEmail: e.target.value })}
-          />
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', lineHeight: 1.6 }}>
-            Участник получит приглашение и сможет принять или отклонить его в приложении.
-          </p>
-          <Button
-            fullWidth
-            icon={<Users size={15} />}
-            loading={create.isPending}
-            onClick={() => create.mutate(form)}
-          >
-            Создать и пригласить
-          </Button>
+      <Modal open={modal} onClose={() => { setModal(false); setForm({ name: '', inviteEmail: '' }); setUserSearch(''); setUserResults([]); }} title="Создать совместный счёт">
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <Input label="Название счёта" placeholder="Семейный бюджет"
+      value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)',
+        letterSpacing: '0.05em', textTransform: 'uppercase', fontFamily: 'var(--font-display)' }}>
+        Найти участника
+      </label>
+      <input
+        placeholder="Имя или email..."
+        value={userSearch}
+        onChange={(e) => setUserSearch(e.target.value)}
+        style={{
+          width: '100%', background: 'var(--surface)',
+          border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
+          padding: '12px 14px', color: 'var(--text-1)', fontSize: '0.9rem',
+        }}
+      />
+
+      {searchLoading && (
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', padding: '4px 0' }}>Поиск...</p>
+      )}
+      {userResults.length > 0 && (
+        <div style={{
+          background: 'var(--surface-2)', borderRadius: 'var(--radius-m)',
+          border: '1px solid var(--border)', overflow: 'hidden',
+        }}>
+          {userResults.map((u) => (
+            <button key={u._id}
+              onClick={() => {
+                setForm(f => ({ ...f, inviteEmail: u.email }));
+                setUserSearch(u.name);
+                setUserResults([]);
+              }}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+                padding: '10px 14px', cursor: 'pointer', background: 'transparent',
+                borderBottom: '1px solid var(--border)', transition: 'var(--transition)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--surface)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%',
+                background: 'var(--accent-dim)', border: '1px solid var(--accent)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-2)', flexShrink: 0,
+              }}>
+                {u.avatar || u.name?.[0]?.toUpperCase()}
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ fontWeight: 600, fontSize: '0.875rem' }}>{u.name}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{u.email}</p>
+              </div>
+            </button>
+          ))}
         </div>
-      </Modal>
+      )}
+      {userSearch.length >= 2 && !searchLoading && userResults.length === 0 && (
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>Пользователь не найден</p>
+      )}
+
+      {form.inviteEmail && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '8px 12px', background: 'var(--green-dim)',
+          borderRadius: 'var(--radius-s)', border: '1px solid rgba(34,211,165,0.25)',
+        }}>
+          <span style={{ fontSize: '0.82rem', color: 'var(--green)' }}>
+            ✓ {form.inviteEmail}
+          </span>
+          <button onClick={() => { setForm(f => ({ ...f, inviteEmail: '' })); setUserSearch(''); }}
+            style={{ color: 'var(--text-3)', cursor: 'pointer', fontSize: '1rem', background: 'none', border: 'none' }}>
+            ×
+          </button>
+        </div>
+      )}
+    </div>
+
+    <p style={{ fontSize: '0.78rem', color: 'var(--text-3)', lineHeight: 1.6 }}>
+      Участник получит приглашение и сможет принять или отклонить его в разделе «Счета».
+    </p>
+
+    <Button fullWidth icon={<Users size={15} />}
+      loading={create.isPending}
+      onClick={() => create.mutate(form)}>
+      Создать и пригласить
+    </Button>
+  </div>
+</Modal>
     </div>
   );
 }

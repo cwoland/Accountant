@@ -10,6 +10,7 @@ import AccountsPage     from './pages/AccountsPage';
 import TransactionsPage from './pages/TransactionsPage';
 import MandatoryPage    from './pages/MandatoryPage';
 import ProductsPage     from './pages/ProductsPage';
+import DebtsPage        from './pages/DebtsPage';
 import ProfilePage      from './pages/ProfilePage';
 import AiPage           from './pages/AiPage';
 import AppLayout        from './components/layout/AppLayout';
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/mandatory"    element={<MandatoryPage />} />
           <Route path="/products"     element={<ProductsPage />} />
+          <Route path="/debts"        element={<DebtsPage />} />
           <Route path="/ai"           element={<AiPage />} />
           <Route path="/profile"      element={<ProfilePage />} />
         </Route>

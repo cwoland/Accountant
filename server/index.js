@@ -18,6 +18,11 @@ import jwt from 'jsonwebtoken';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 
+dotenv.config();
+connectDB();
+
+const app = express();
+
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer });
 
@@ -66,11 +71,6 @@ wss.on('connection', (ws, req) => {
         }
     });
 });
-
-dotenv.config();
-connectDB();
-
-const app = express();
 
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));

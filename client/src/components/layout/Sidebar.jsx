@@ -3,7 +3,7 @@ import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, ArrowLeftRight, AlertCircle,
-  ShoppingCart, Sparkles, User, Users, LogOut, Wallet, Menu, X,
+  ShoppingCart, Sparkles, User, Users, LogOut, Wallet, Menu, X, Landmark
 } from 'lucide-react';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
@@ -14,6 +14,7 @@ const links = [
     { to: '/transactions', icon: <ArrowLeftRight size={18} />,  label: 'Транзакции' },
     { to: '/mandatory',    icon: <AlertCircle size={18} />,     label: 'Обязательные' },
     { to: '/products',     icon: <ShoppingCart size={18} />,    label: 'Товары и услуги' },
+    { to: '/debts',        icon: <Landmark size={18} />,        label: 'Долги' },
     { to: '/ai',           icon: <Sparkles size={18} />,        label: 'Советник' },
 ];
 
