@@ -7,6 +7,7 @@ import {
     changePassword,
 } from '../controllers/authController.js';
 import protect from '../middleware/auth.js';
+import { searchUsers } from '../controllers/authController.js';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.post('/login', login);
 router.get('/me', protect, getMe);
 router.put('/profile', updateProfile);
 router.put('/password', protect, changePassword);
+router.get('/search', protect, searchUsers);
 
 export default router;

@@ -110,3 +110,25 @@ export const changePassword = async (req, res, next) => {
         next(err);
     }
 };
+
+export const searchUsers = async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.trim().length < 2)
+      return res.status(400).json({ message: 'Минимум 2 символа' });
+
+    const users = await User.find({
+      $or: [
+        { name: { $regex: q.trim(), $options: 'i' } },
+        { email: { $regex: q.trim(), $options: 'i' } },
+      ],
+      _id: { $ne: req.user._id },
+    })
+      .select('name email avatar')
+      .limit(10);
+
+      res.json(users);
+  } catch (err) {
+    next(err);
+  }
+};
