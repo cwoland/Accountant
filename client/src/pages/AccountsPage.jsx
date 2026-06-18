@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Users, Check, X, LogOut, Trash2, Crown, Clock } from 'lucide-react';
+import { Plus, Users, User, Check, X, LogOut, Trash2, Crown, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
     getAccountsApi, getInvitesApi, createAccountApi,
@@ -108,7 +108,7 @@ export default function AccountsPage() {
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
           <Card style={{ border: '1px solid rgba(251,191,36,0.3)', background: 'var(--amber-dim)' }}>
             <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 12, color: 'var(--amber)' }}>
-              🔔 Приглашения ({invites.length})
+              Приглашения ({invites.length})
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {invites.map((inv) => (
@@ -162,7 +162,9 @@ export default function AccountsPage() {
               width: 48, height: 48, borderRadius: 'var(--radius-m)',
               background: 'var(--surface-2)', fontSize: '1.4rem',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>👤</div>
+            }}>
+              <User size={22} color="var(--text-2)" />
+            </div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>Личный счёт</p>
@@ -179,7 +181,7 @@ export default function AccountsPage() {
       {isLoading ? <Loader text="Загружаем счета..." /> : (
         accounts.length === 0
           ? <EmptyState
-              icon="👥"
+              icon={<Users size={22} color={acc.color} />}
               title="Нет совместных счетов"
               description="Создайте совместный счёт и пригласите партнёра, члена семьи или друга."
               action={() => setModal(true)}
@@ -208,7 +210,7 @@ export default function AccountsPage() {
                           background: `${acc.color}25`, fontSize: '1.4rem', flexShrink: 0,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>
-                          {acc.icon}
+                          <Users size={22} color={acc.color} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>

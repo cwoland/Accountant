@@ -1,44 +1,40 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import useStore from '../store/useStore';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import api from '../api/axios';
 
 export default function useAccountChat(accountId) {
-    const token = useStore((s) => s.token);
-    const [messages, setMessages] = useState([]);
-    const [connected, setConnected] = useState(false);
-    const wsRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+  const lastIdRef = useRef(null);
 
-    useEffect(() => {
-        if (!accountId || !token) return;
+  const fetchMessages = useCallback(async () => {
+    if (!accountId) return;
+    try {
+      const { data } = await api.get(`/messages/${accountId}`);
+      setMessages(data);
+      if (data.length > 0) lastIdRef.current = data[data.length - 1]._id;
+    } catch {}
+  }, [accountId]);
 
-        const wsUrl = import.meta.env.VITE_API_URL
-            .replace('https://', 'wss://')
-            .replace('http://', 'ws://')
-            .replace('/api', '');
+  useEffect(() => {
+    if (!accountId) return;
+    setLoading(true);
+    fetchMessages().finally(() => setLoading(false));
 
-        const ws = new WebSocket(
-            `${wsUrl}?accountId=${accountId}&token=${token}`
-        );
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, [accountId, fetchMessages]);
 
-        ws.onopen = () => setConnected(true);
-        ws.onclose = () => setConnected(false);
-        ws.onmessage = (e) => {
-            try {
-                const msg = JSON.parse(e.data);
-                if (msg.type === 'message') {
-                    setMessages((prev) => [...prev, msg]);
-                }
-            } catch {}
-        };
+  const send = useCallback(async (text) => {
+    if (!text?.trim() || !accountId) return;
+    setSending(true);
+    try {
+      const { data } = await api.post(`/messages/${accountId}`, { text });
+      setMessages((prev) => [...prev, data]);
+    } catch {} finally {
+      setSending(false);
+    }
+  }, [accountId]);
 
-        wsRef.current = ws;
-        return () => ws.close();
-    }, [accountId, token]);
-
-    const send = useCallback((text) => {
-        if (wsRef.current?.readyState === WebSocket.OPEN) {
-            wsRef.current.send(JSON.stringify({ text }));
-        }
-    }, []);
-
-    return { messages, connected, send };
+  return { messages, loading, sending, send };
 }
