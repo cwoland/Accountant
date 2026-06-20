@@ -272,7 +272,7 @@ export default function AiPage() {
 
         <button
         onClick={() => setFullScreen(v => !v)}
-        title={fullscreen ? 'Свернуть' : 'На весь экран'}
+        title={fullScreen ? 'Свернуть' : 'На весь экран'}
         style={{
           width: 36,
           height: 36,
@@ -289,7 +289,7 @@ export default function AiPage() {
         onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-2)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
         onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
         >
-          {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+          {fullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         </button>
       </div>
 
