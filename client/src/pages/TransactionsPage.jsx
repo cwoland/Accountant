@@ -253,11 +253,11 @@ export default function TransactionsPage() {
         )}
       </Card>
 
-      <Modal open={modal === 'add'} onClose={() => setModal(false)} title="Новая транзакция">
+      <Modal open={modal === 'add'} onClose={() => setModal(null)} title="Новая транзакция">
         <TransactionForm onSubmit={handleAdd} loading={create.isPending} />
       </Modal>
 
-      <Modal open={modal === 'edit'} onClose={() => { setModal(false); setEditing(null); }} title="Редактировать">
+      <Modal open={modal === 'edit'} onClose={() => { setModal(null); setEditing(null); }} title="Редактировать">
         <TransactionForm initial={editing} onSubmit={handleEdit} loading={update.isPending} />
       </Modal>
       <ConfirmModal

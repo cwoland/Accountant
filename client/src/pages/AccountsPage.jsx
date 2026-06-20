@@ -49,7 +49,7 @@ export default function AccountsPage() {
 
     const create = useMutation({
         mutationFn: createAccountApi,
-        onSuccess: () => { toast.success('Счёт создан, приглашение отправлено!'); invalidate(); setModal(false); },
+        onSuccess: () => { toast.success('Счёт создан'); invalidate(); setModal(false); setForm: ({ name: '', inviteEmail: '' }); setSelectedUser(null); setUserSearch(''); setSearchResults([]); },
         onError: (e) => toast.error(e.response?.data?.message || 'Ошибка'),
     });
 

@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react';
 import useStore from '../../store/useStore';
 import { useQuery } from '@tanstack/react-query';
 import { getAccountsApi } from '../../api/accounts';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell, WifiOff } from 'lucide-react';
 
 export default function Header() {
     const isOnline = useOnlineStatus();
     const [queueCount, setQueueCount] = useState(0);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const check = async () => {
@@ -96,6 +97,22 @@ export default function Header() {
           </motion.div>
         )}
 
+        {activeAccount && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '4px 12px',
+            borderRadius: 99,
+            background: `${activeAccount.color}20`,
+            border: `1px solid ${activeAccount.color}50`,
+          }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: activeAccount.color }}>
+              {activeAccount.name}
+            </span>
+          </div>
+        )}
+
         {isOnline && queueCount > 0 && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
@@ -130,6 +147,7 @@ export default function Header() {
             color: 'var(--text-3)', cursor: 'pointer',
             transition: 'var(--transition)',
             }}
+            onClick={() => navigate('/profile')}
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
           <Bell size={16} />

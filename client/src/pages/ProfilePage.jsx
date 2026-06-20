@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Wallet, Globe, Save, Camera, Bell, BellOff } from 'lucide-react';
 import toast from 'react-hot-toast';

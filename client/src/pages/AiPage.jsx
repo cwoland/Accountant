@@ -247,8 +247,6 @@ export default function AiPage() {
         height: 'calc(100vh - var(--header-h) - 64px)',
       }),
     }}>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: 'calc(100vh - var(--header-h) - 64px)' }}>
-
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
         <div style={{
           width: 48, height: 48, borderRadius: 'var(--radius-m)',
@@ -419,7 +417,6 @@ export default function AiPage() {
           </motion.button>
         </div>
       </Card>
-    </div>
     </div>
   );
 }

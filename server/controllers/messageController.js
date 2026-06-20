@@ -1,6 +1,14 @@
 import Message from '../models/Message.js';
-import { pushToUser } from './pushController.js';
+import PushSubscription from '../models/PushSubscription.js';
+import { sendPush } from '../utils/pushService.js';
 import Account from '../models/Account.js';
+
+const pushToUser = async (userId, payload) => {
+    const sub = await PushSubscription.findOne({ user: userId });
+    if (!sub) return;
+    const result = await sendPush(sub.subscription, payload);
+    if (result === 'expired') await PushSubscription.deleteOne({ user: userId });
+};
 
 const checkAccess = async (accountId, userId) => {
     const account = await Account.findById(accountId);

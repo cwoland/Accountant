@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, AlertCircle, CheckCircle2, Clock, X, Home } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -25,6 +25,13 @@ export default function MandatoryPage() {
   const { mandatoryCategories } = useCategories();
   const { transactions, create, isLoading } = useTransactions({ ...range, limit: 100 });
   const qc = useQueryClient();
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const hideCategory = useMutation({
     mutationFn: hideCategoryApi,
@@ -67,7 +74,7 @@ return (
       </Button>
     </div>
 
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 16 }}>
       {[
         {
           label: 'Оплачено категорий',

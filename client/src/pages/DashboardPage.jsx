@@ -110,7 +110,7 @@ export default function DashboardPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const range = customRange && startDate && endDate ? { startDate, endDate } : getMonthRange(monthOffset);
-  const monthLabel = customRange ? `${startDate} - ${endDate}` : new Date(new Date().getMonth() + monthOffset).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  const monthLabel = customRange ? `${startDate} - ${endDate}` : new Date(new Date().getFullYear(), new Date().getMonth() + monthOffset, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [fact] = useState(() => FACTS[Math.floor(Math.random() * FACTS.length)]);
 
