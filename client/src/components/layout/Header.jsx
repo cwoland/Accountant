@@ -1,6 +1,6 @@
 import useOnlineStatus from '../../hooks/useOnlineStatus';
 import { getQueueCount } from '../../utils/offlineQueue';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useState } from '../../store/useStore';
 import { useQuery } from '@tanstack/react-query';
 import { getAccountsApi } from '../../api/accounts';
