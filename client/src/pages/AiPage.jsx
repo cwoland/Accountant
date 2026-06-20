@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, TrendingUp, Lightbulb, Tag, Bot, User } from 'lucide-react';
+import { Sparkles, Send, TrendingUp, Lightbulb, Tag, Bot, User, BarChart2, Maximize2, Minimize2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { analyzeExpensesApi, getBudgetAdviceApi, categorizeTransactionApi } from '../api/ai';
 import { getStatsApi } from '../api/transactions';
@@ -13,7 +13,8 @@ import toast from 'react-hot-toast';
 
 const QUICK = [
   { id: 'analyze', icon: <TrendingUp size={16} />, label: 'Анализ расходов',    desc: 'Разбор трат за месяц' },
-  { id: 'advice',  icon: <Lightbulb size={16} />,  label: 'Советы по бюджету', desc: 'Как оптимизировать' },
+  { id: 'advice',  icon: <Lightbulb size={16} />,  label: 'Советы по бюджету',  desc: 'Как оптимизировать' },
+  { id: 'invest',  icon: <BarChart2 size={16} />,  label: 'Инвестиции',         desc: 'Куда вложить деньги' },
   { id: 'cat',     icon: <Tag size={16} />,         label: 'Категоризация',     desc: 'Определи категорию' },
 ];
 
@@ -86,6 +87,14 @@ export default function AiPage() {
   const [catInput, setCatInput] = useState('');
   const bottomRef = useRef(null);
   const range = getMonthRange(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
+  const [fullScreen, setFullScreen] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ['stats', range],
@@ -155,6 +164,32 @@ export default function AiPage() {
         setLoading(false);
       }
     }
+
+    if (id === 'invest') {
+      pushMsg('user', 'Дай советы по инвестициям на основе моего бюджета');
+      setLoading(true);
+      const loadId = pushMsg('ai', '', true);
+      try {
+        const { data } = await getBudgetAdviceApi({
+          income: stats?.summary?.income || 0,
+          expense: stats?.summary?.expense || 0,
+          monthlyBudget: user?.monthlyBudget || 0,
+          currency: user?.currency,
+          customQuestion:
+          `У меня ежемесячный доход ${stats?.summary?.income || 0} ${user?.currency || 'RUB'} ` + 
+          `и расходы ${stats?.summary?.expense || 0} ${user?.currency || 'RUB'}. ` + 
+          `Свободные средства: ${stats?.summary?.balance || 0} ${user?.currency || 'RUB'}. ` +
+          `Дай 3 конкретных совета по инвестированию свободных средств с учётом моего уровня дохода. ` +
+          `Укажи инструменты (вклады, акции, облигации, ETF и т.д.), риски и ожидаемую доходность. ` +
+          `Ответ на русском языке, нумерованный список.`,
+        });
+        updateMsg(loadId, data.text);
+      } catch {
+        updateMsg(loadId, 'Не удалось получить ответ. Попробуй позже');
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleCategorize = async () => {
@@ -197,6 +232,21 @@ export default function AiPage() {
   };
 
   return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 20,
+      ...(fullScreen ? {
+        position: 'fixed',
+        inset: 0,
+        zIndex: 500,
+        background: 'var(--bg)',
+        padding: 20,
+        overflowY: 'auto',
+      } : {
+        height: 'calc(100vh - var(--header-h) - 64px)',
+      }),
+    }}>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: 'calc(100vh - var(--header-h) - 64px)' }}>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
@@ -219,9 +269,31 @@ export default function AiPage() {
             animation: 'pulse 2s ease-in-out infinite' }} />
           <span style={{ fontSize: '0.78rem', color: 'var(--green)', fontWeight: 600 }}>Online</span>
         </div>
+
+        <button
+        onClick={() => setFullScreen(v => !v)}
+        title={fullscreen ? 'Свернуть' : 'На весь экран'}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 'var(--radius-m)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          color: 'var(--text-2)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'var(--transition)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-2)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+        >
+          {fullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, flexShrink: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, flexShrink: 0 }}>
         {QUICK.map((q) => (
           <motion.button key={q.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
             onClick={() => handleQuick(q.id)} disabled={loading}
@@ -347,6 +419,7 @@ export default function AiPage() {
           </motion.button>
         </div>
       </Card>
+    </div>
     </div>
   );
 }

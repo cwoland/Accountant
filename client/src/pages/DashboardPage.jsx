@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  TrendingUp, TrendingDown, Wallet, ArrowUpRight,
+  TrendingUp, TrendingDown, Wallet, ChevronLeft, ChevronRight, Calendar, ArrowUpRight,
   ArrowDownRight, Sparkles, BarChart2, Receipt, Lightbulb, PieChart as PieChartIcon
 } from 'lucide-react';
 import {
@@ -105,8 +105,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const user = useStore((s) => s.user);
-  const [monthOffset] = useState(0);
-  const range = getMonthRange(monthOffset);
+  const [monthOffset, setMonthOffset] = useState(0);
+  const [customRange, setCustomRange] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const range = customRange && startDate && endDate ? { startDate, endDate } : getMonthRange(monthOffset);
+  const monthLabel = customRange ? `${startDate} - ${endDate}` : new Date(new Date().getMonth() + monthOffset).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [fact] = useState(() => FACTS[Math.floor(Math.random() * FACTS.length)]);
 
@@ -207,6 +211,92 @@ export default function DashboardPage() {
         </div>
       </Card>
     </motion.div>
+    <motion.div variants={FADE}>
+  <Card style={{ padding: '12px 16px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <button onClick={() => { setMonthOffset(o => o - 1); setCustomRange(false); }}
+        style={{
+          width: 32, height: 32, borderRadius: 'var(--radius-s)',
+          background: 'var(--surface-2)', border: 'none', cursor: 'pointer',
+          color: 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+        <ChevronLeft size={16} />
+      </button>
+
+      <span style={{
+        flex: 1, textAlign: 'center', fontFamily: 'var(--font-display)',
+        fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-1)',
+        textTransform: 'capitalize', minWidth: 140,
+      }}>
+        {monthLabel}
+      </span>
+
+      <button onClick={() => { setMonthOffset(o => o + 1); setCustomRange(false); }}
+        disabled={monthOffset >= 0}
+        style={{
+          width: 32, height: 32, borderRadius: 'var(--radius-s)',
+          background: 'var(--surface-2)', border: 'none',
+          cursor: monthOffset >= 0 ? 'not-allowed' : 'pointer',
+          color: monthOffset >= 0 ? 'var(--text-3)' : 'var(--text-2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          opacity: monthOffset >= 0 ? 0.4 : 1,
+        }}>
+        <ChevronRight size={16} />
+      </button>
+
+      <button onClick={() => { setMonthOffset(0); setCustomRange(false); }}
+        style={{
+          padding: '5px 12px', borderRadius: 'var(--radius-s)',
+          background: monthOffset === 0 && !customRange ? 'var(--accent)' : 'var(--surface-2)',
+          color: monthOffset === 0 && !customRange ? '#fff' : 'var(--text-2)',
+          border: 'none', cursor: 'pointer', fontSize: '0.78rem',
+          fontFamily: 'var(--font-display)', fontWeight: 600,
+          transition: 'var(--transition)',
+        }}>
+        Сейчас
+      </button>
+
+      <button onClick={() => setCustomRange(v => !v)}
+        style={{
+          padding: '5px 12px', borderRadius: 'var(--radius-s)',
+          background: customRange ? 'var(--accent)' : 'var(--surface-2)',
+          color: customRange ? '#fff' : 'var(--text-2)',
+          border: 'none', cursor: 'pointer', fontSize: '0.78rem',
+          fontFamily: 'var(--font-display)', fontWeight: 600,
+          transition: 'var(--transition)',
+        }}>
+        <Calendar size={13} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+        Период
+      </button>
+    </div>
+
+    {customRange && (
+      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+        style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 130 }}>
+          <label style={{ fontSize: '0.72rem', color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>От</label>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+            style={{
+              width: '100%', background: 'var(--surface)',
+              border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
+              padding: '8px 10px', color: 'var(--text-1)', fontSize: '0.85rem',
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 130 }}>
+          <label style={{ fontSize: '0.72rem', color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>До</label>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+            style={{
+              width: '100%', background: 'var(--surface)',
+              border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
+              padding: '8px 10px', color: 'var(--text-1)', fontSize: '0.85rem',
+            }}
+          />
+        </div>
+      </motion.div>
+    )}
+  </Card>
+</motion.div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>    
         {statCards.map((c, i) => (
           <motion.div key={i} variants={FADE}>

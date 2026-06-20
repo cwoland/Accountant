@@ -42,7 +42,13 @@ export default function TransactionsPage() {
         t.category?.name?.toLowerCase().includes(search.toLowerCase()))
     : transactions;
 
-  const handleAdd = (data) => create.mutate(data, { onSuccess: () => setModal(null) });
+  const handleAdd = (data, meta) => {
+    if (meta?.online) {
+      setModal(null);
+      return;
+    }
+    create.mutate(data, { onSuccess: () => setModal(null) });
+  };
   const handleEdit = (data) => update.mutate(
     { id: editing._id, data },
     { onSuccess: () => { setModal(null); setEditing(null); } }

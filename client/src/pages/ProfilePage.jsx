@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Wallet, Globe, Save, Camera } from 'lucide-react';
+import { User, Mail, Lock, Wallet, Globe, Save, Camera, Bell, BellOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { updateProfileApi, changePasswordApi } from '../api/auth';
+import { subscribeToPush, unsubscribeFromPush } from '../utils/push';
 import useStore from '../store/useStore';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -33,6 +34,14 @@ export default function ProfilePage() {
   const [profileLoading, setProfileLoading] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  useEffect(() => {
+    navigator.serviceWorker?.ready.then(async (reg) => {
+      const sub = await reg.pushManager.getSubscription();
+      setPushEnabled(!!sub);
+    });
+  }, []);
 
   const setP = (f) => (e) => setProfileForm((prev) => ({ ...prev, [f]: e.target ? e.target.value : e }));
   const setPw = (f) => (e) => setPwForm((prev) => ({ ...prev, [f]: e.target.value }));
@@ -74,6 +83,18 @@ export default function ProfilePage() {
       toast.error(err.response?.data?.message || 'Ошибка смены пароля');
     } finally {
       setPwLoading(false);
+    }
+  };
+
+  const handlePushToggle = async () => {
+    if (pushEnabled) {
+      await unsubscribeFromPush();
+      toast.success('Уведомления отключены');
+      setPushEnabled(false);
+    } else {
+      const result = await subscribeToPush();
+      if (result) { toast.success('Уведомления включены'); setPushEnabled(true); }
+      else toast.error('Не удалось включить уведомления');
     }
   };
 
@@ -297,6 +318,40 @@ export default function ProfilePage() {
           ))}
         </Card>
       </motion.div>
-    </motion.div>
+      <motion.div variants={FADE}>
+        <Card style={{ padding: '18px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+               width: 36, height: 36, borderRadius: 'var(--radius-s)',
+               background: pushEnabled ? 'var(--green-dim)' : 'var(--surface-2)',
+               color: pushEnabled ? 'var(--green)' : 'var(--text-3)',
+               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+               {pushEnabled ? <Bell size={17} /> : <BellOff size={17} />}
+              </div>
+             <div>
+             <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>Push-уведомления</p>
+             <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 2 }}>
+            {pushEnabled ? 'Включены' : 'Выключены'} · платежи, чат, ИИ, статистика
+             </p>
+           </div>
+          </div>
+          <button onClick={handlePushToggle} style={{
+           width: 44, height: 24, borderRadius: 99, cursor: 'pointer', border: 'none',
+           background: pushEnabled ? 'var(--green)' : 'var(--surface-2)',
+           position: 'relative', transition: 'var(--transition)',
+          }}>
+          <motion.div animate={{ x: pushEnabled ? 20 : 2 }}
+            style={{
+              width: 20, height: 20, borderRadius: '50%',
+              background: '#fff', position: 'absolute', top: 2,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+            }}/>
+          </button>
+            </div>
+          </Card>
+         </motion.div>
+        </motion.div>
   );
 }

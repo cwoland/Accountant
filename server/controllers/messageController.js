@@ -1,4 +1,5 @@
 import Message from '../models/Message.js';
+import { pushToUser } from './pushController.js';
 import Account from '../models/Account.js';
 
 const checkAccess = async (accountId, userId) => {
@@ -43,6 +44,26 @@ export const sendMessage = async (req, res, next) => {
             user: req.user._id,
             text: text.trim(),
         });
+
+        const account = await Account.find(accountId)
+            .populate('owner', '_id')
+            .populate('members.user', '_id');
+        
+        const allMembers = [
+            account.owner._id,
+            ...account.members.filter(m => m.status === 'active').map(m => m.user._id),
+        ];
+
+        for (const memberId of allMembers) {
+            if (memberId.toString() !== req.user._id.toString()) {
+                await pushToUser(memberId, {
+                    title: `💬${account.name}`,
+                    body: `${req.user.name}: ${text.slice(0, 60)}`,
+                    icon: '/pwa-192.png',
+                    url: '/accounts',
+                });
+            }
+        }
 
         await message.populate('user', 'name avatar');
         res.status(201).json(message);

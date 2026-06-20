@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, WifiOff } from 'lucide-react';
 import { categorizeTransactionApi } from '../api/ai';
 import useCategories from '../hooks/useCategories';
+import { addToQueue, getQueueCount } from '../utils/offlineQueue';
+import useOnlineStatus from '../hooks/useOnlineStatus';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Select from './ui/Select';
@@ -14,6 +16,7 @@ const empty = {
 };
 
 export default function TransactionForm({ initial, onSubmit, loading }) {
+  const isOnline = useOnlineStatus();
   const [form, setForm] = useState(initial || empty);
   const [aiLoading, setAiLoading] = useState(false);
   const { incomeCategories, expenseCategories } = useCategories();
@@ -52,15 +55,45 @@ export default function TransactionForm({ initial, onSubmit, loading }) {
     if (loading) return;
     if (!form.amount || !form.category)
       return toast.error('Заполните сумму и категорию');
-    onSubmit({
+
+    const data = {
       ...form,
       amount: parseFloat(form.amount),
       recurringPeriod: form.isRecurring ? form.recurringPeriod || 'monthly' : null,
-    });
-  };
+    };
+
+    if (!isOnline) {
+      await addToQueue(data);
+      const count = await getQueueCount();
+      toast('Сохранено', {
+        icon: '📶',
+        duration: 4000,
+      });
+      onSubmit(null, { offline: true });
+      return;
+    }
+
+    onSubmit(data);
+};
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {!isOnline && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '10px 14px',
+          borderRadius: 'var(--radius-m)',
+          background: 'var(--amber-dim)',
+          border: '1px solid rgba(251,191,36,0.3)',
+        }}>
+          <WifiOff size={16} color="var(--amber)" />
+          <p style={{ fontSize: '0.82rem', color: 'var(--amber)', fontWeight: 500 }}>
+            Офлайн-режим
+          </p>
+        </div>
+      )}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {['expense', 'income'].map((t) => (
           <button key={t} type="button" onClick={() => setForm((f) => ({ ...f, type: t, category: '' }))}

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import useSyncQueue from './hooks/useSyncQueue';
 import useStore from './store/useStore';
 import WakeUpBanner  from './components/ui/WakeUpBanner';
 import InstallBanner from './components/ui/InstallBanner';
@@ -11,10 +12,16 @@ import TransactionsPage from './pages/TransactionsPage';
 import MandatoryPage    from './pages/MandatoryPage';
 import ProductsPage     from './pages/ProductsPage';
 import DebtsPage        from './pages/DebtsPage';
+import GoalsPage        from './pages/GoalsPage';
 import ProfilePage      from './pages/ProfilePage';
 import AiPage           from './pages/AiPage';
 import AppLayout        from './components/layout/AppLayout';
 import NotFoundPage     from './pages/NotFoundPage';
+
+function SyncManager() {
+  useSyncQueue();
+  return null;
+}
 
 function PrivateRoute({ children }) {
   const token = useStore((s) => s.token);
@@ -29,6 +36,7 @@ function GuestRoute({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+     <SyncManager />
       <WakeUpBanner />
       <InstallBanner />
       <Routes>
@@ -42,6 +50,7 @@ export default function App() {
           <Route path="/mandatory"    element={<MandatoryPage />} />
           <Route path="/products"     element={<ProductsPage />} />
           <Route path="/debts"        element={<DebtsPage />} />
+          <Route path="/goals"        element={<GoalsPage />} />
           <Route path="/ai"           element={<AiPage />} />
           <Route path="/profile"      element={<ProfilePage />} />
         </Route>

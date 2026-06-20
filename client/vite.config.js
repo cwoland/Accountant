@@ -20,15 +20,43 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         icons: [
+          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/accountant-server.*\.onrender\.com\/api\/transactions/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'transactions-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/accountant-server.*\.onrender.com\/api\/categories/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'categories-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/accountant-server.*\.onrender\.com\/api\/transactions\/stats/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'stats-cache',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 },
+              networkTimeoutSeconds: 5,
+            },
+          },
+        ],
       },
       devOptions: { enabled: false },
     }),

@@ -14,6 +14,8 @@ import aiRoutes from './routes/ai.js';
 import debtRoutes from './routes/debts.js';
 import userRoutes from './routes/users.js';
 import messageRoutes from './routes/messages.js';
+import goalRoutes from './routes/goals.js';
+import pushRoutes from './routes/push.js';
 
 import jwt from 'jsonwebtoken';
 
@@ -36,6 +38,8 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/debts', debtRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/goals', goalRoutes);
+app.use('/api/push', pushRoutes);
 
 
 app.get('/api/health', (req, res) => {

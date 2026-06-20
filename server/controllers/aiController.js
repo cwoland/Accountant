@@ -1,3 +1,5 @@
+import { pushToUser } from './pushController.js';
+
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'nex-agi/nex-n2-pro:free';
 
@@ -66,6 +68,13 @@ export const getBudgetAdvice = async (req, res, next) => {
     }
 
     const text = await callAI([{ role: 'user', content: prompt }]);
+    await pushToUser(req.user._id, {
+      title: 'Советник ответил',
+      body: text.slice(0, 80) + '...',
+      icon: '/pwa-192.png',
+      url: '/ai',
+    });
+    
     res.json({ text });
   } catch (err) {
     next(err);
