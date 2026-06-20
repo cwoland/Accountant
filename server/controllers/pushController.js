@@ -20,6 +20,13 @@ export const subscribe = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+export const unsubscribe = async (req, res, next) => {
+    try {
+        await PushSubscription.deleteOne({ user: req.user._id });
+        res.json({ message: 'Подписка удалена' });
+    } catch (err) { next(err); }
+};
+
 export const getVapidKey = async (req, res) => {
     res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
 };
