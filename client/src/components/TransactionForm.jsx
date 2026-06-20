@@ -50,7 +50,7 @@ export default function TransactionForm({ initial, onSubmit, loading }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
     if (!form.amount || !form.category)
