@@ -7,7 +7,6 @@ import { getAccountsApi } from '../../api/accounts';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell, WifiOff } from 'lucide-react';
-import useStore from '../../store/useStore';
 
 export default function Header() {
     const isOnline = useOnlineStatus();
