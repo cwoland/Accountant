@@ -68,7 +68,10 @@ export default function InstallBanner() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: 'var(--shadow-glow)', fontSize: '1.3rem',
           }}>
-            💰
+            <img
+            src="/icon.svg"
+            alt="Accountant"
+            style={{ width: 44, height: 44, borderRadius: 'var(--radius-m)' }} />
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>

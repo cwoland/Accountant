@@ -16,6 +16,7 @@ const openDB = () =>
     });
 
 export const addToQueue = async (transaction) => {
+    try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
         const tx = db.transaction(STORE, 'readwrite');
@@ -26,6 +27,10 @@ export const addToQueue = async (transaction) => {
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
     });
+} catch (err) {
+    console.warn('IndexedDB unavailable, skipping offline queue:', err);
+    return null;
+}
 };
 
 export const getQueue = async () => {
@@ -49,11 +54,15 @@ export const removeFromQueue = async (id) => {
 };
 
 export const getQueueCount = async () => {
+    try {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readonly');
     const req = tx.objectStore(STORE).count();
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => resolve(0);
   });
+} catch {
+    return 0;
+}
 };

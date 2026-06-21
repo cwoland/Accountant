@@ -15,8 +15,12 @@ export default function Header() {
 
     useEffect(() => {
         const check = async () => {
+          try {
             const count = await getQueueCount();
             setQueueCount(count);
+          } catch {
+            setQueueCount(0);
+          }
         };
         check();
         const interval = setInterval(check, 5000);
