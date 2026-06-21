@@ -32,7 +32,7 @@ export const subscribeToPush = async () => {
 
     const subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+      applicationServerKey: urlBase64ToUnit8Array(data.publicKey),
     });
 
     console.log('Subscription created:', subscription);
