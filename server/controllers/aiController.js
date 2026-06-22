@@ -1,7 +1,7 @@
 import { pushToUser } from './pushController.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'nex-agi/nex-n2-pro:free';
+const MODEL = 'openai/gpt-oss-120b:free';
 
 const callAI = async (messages) => {
   const res = await fetch(OPENROUTER_URL, {
@@ -21,11 +21,12 @@ const callAI = async (messages) => {
   }
 
   const data = await res.json();
-  console.log('OpenRouter response:', JSON.stringify(data, null, 2));
 
   if (!data?.choices?.[0]?.message?.content) {
+    console.error('OpenRouter response:', data);
+
     throw new Error(
-      `Invalid OpenRouter response: ${JSON.stringify(data)}`
+      data?.error?.message || 'Invalid OpenRouter response'
     );
   }
 

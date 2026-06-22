@@ -39,7 +39,7 @@ const Bubble = ({ msg }) => {
         </div>
       )}
       <div style={{
-        maxWidth: '75%',
+        maxWidth: isMobile ? '90%' : '75%',
         background: isAi ? 'var(--surface)' : 'var(--accent)',
         border: isAi ? '1px solid var(--border)' : 'none',
         borderRadius: isAi ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
@@ -95,6 +95,32 @@ export default function AiPage() {
   }, []);
 
   const [fullScreen, setFullScreen] = useState(false);
+
+  useEffect(() => {
+    if (!fullScreen) {
+      document.body.style.overflow = '';
+      return;
+    }
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [fullScreen]);
+
+  const [vh, setVh] = useState(window.innerHeight);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      setVh(window.innerHeight);
+    };
+
+    window.addEventListener('resize', updateHeight);
+
+    return () => {
+      window.addEventListener('resize', updateHeight);
+    };
+  }, []);
 
   const { data: stats } = useQuery({
     queryKey: ['stats', range],
@@ -238,16 +264,19 @@ export default function AiPage() {
       gap: 20,
       ...(fullScreen ? {
         position: 'fixed',
-        inset: 0,
-        zIndex: 500,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 9999,
+        height: vh,
         background: 'var(--bg)',
-        padding: 20,
-        overflowY: 'auto',
+        padding: isMobile ? 12 : 20,
+        overflow: 'hidden',
       } : {
-        height: 'calc(100vh - var(--header-h) - 64px)',
+        height: `calc(${vh}px - var(--header-h) - 64px)`,
       }),
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, flexWrap: isMobile ? 'wrap' : 'nowrap', }}>
         <div style={{
           width: 48, height: 48, borderRadius: 'var(--radius-m)',
           background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -258,7 +287,7 @@ export default function AiPage() {
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>ИИ-советник</h2>
           <p style={{ color: 'var(--text-3)', fontSize: '0.82rem', marginTop: 2 }}>
-            Powered by Nex N2 Pro · OpenRouter
+            Powered by GPT OSS 120B · OpenRouter
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8,
@@ -354,12 +383,23 @@ export default function AiPage() {
       </AnimatePresence>
 
       <Card style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        padding: 0, overflow: 'hidden', minHeight: 0,
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column',
+        padding: 0, 
+        overflow: 'hidden', 
+        minHeight: 0,
+        height: fullScreen ? '100%' : 'auto',
       }}>
         <div style={{
-          flex: 1, overflowY: 'auto', padding: '20px',
-          display: 'flex', flexDirection: 'column', gap: 16,
+          flex: 1, 
+          minHeight: 0,
+          overflowY: 'auto',
+          WebKitOverflowScrolling: 'touch',
+          padding: isMobile ? 12 : 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
         }}>
           <AnimatePresence>
             {messages.map((msg) => <Bubble key={msg.id || msg.text} msg={msg} />)}
@@ -370,7 +410,7 @@ export default function AiPage() {
         {stats?.summary && (
           <div style={{
             padding: '10px 20px', borderTop: '1px solid var(--border)',
-            display: 'flex', gap: 20, background: 'var(--bg-2)',
+            display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-2)',
           }}>
             {[
               { label: 'Доходы', value: formatCurrency(stats.summary.income, user?.currency), color: 'var(--green)' },
@@ -385,8 +425,13 @@ export default function AiPage() {
           </div>
         )}
         <div style={{
-          padding: '14px 16px', borderTop: '1px solid var(--border)',
-          display: 'flex', gap: 10, alignItems: 'flex-end',
+          padding: isMobile ? '10px 12px' : '14px 16px',
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          gap: 10,
+          alignItems: 'flex-end',
+          flexShrink: 0,
+          background: 'var(--surface)',
         }}>
           <textarea
             placeholder="Задай вопрос по финансам..."
