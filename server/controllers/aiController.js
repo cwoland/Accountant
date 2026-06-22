@@ -21,6 +21,14 @@ const callAI = async (messages) => {
   }
 
   const data = await res.json();
+  console.log('OpenRouter response:', JSON.stringify(data, null, 2));
+
+  if (!data?.choices?.[0]?.message?.content) {
+    throw new Error(
+      `Invalid OpenRouter response: ${JSON.stringify(data)}`
+    );
+  }
+
   return data.choices[0].message.content;
 };
 
@@ -68,12 +76,12 @@ export const getBudgetAdvice = async (req, res, next) => {
     }
 
     const text = await callAI([{ role: 'user', content: prompt }]);
-    await pushToUser(req.user._id, {
-      title: 'Советник ответил',
-      body: text.slice(0, 80) + '...',
-      icon: '/pwa-192.png',
-      url: '/ai',
-    });
+    // await pushToUser(req.user._id, {
+     // title: 'Советник ответил',
+     // body: text.slice(0, 80) + '...',
+     // icon: '/pwa-192.png',
+     // url: '/ai',
+    //});
     
     res.json({ text });
   } catch (err) {
