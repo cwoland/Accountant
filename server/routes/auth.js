@@ -14,7 +14,7 @@ const router = Router();
 router.post('/register', register);
 router.post('/login', login);
 router.get('/me', protect, getMe);
-router.put('/profile', updateProfile);
+router.put('/profile', protect, updateProfile);
 router.put('/password', protect, changePassword);
 router.get('/search', protect, searchUsers);
 

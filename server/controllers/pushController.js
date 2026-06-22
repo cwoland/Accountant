@@ -32,10 +32,15 @@ export const getVapidKey = async (req, res) => {
 };
 
 export const pushToUser = async (userId, payload) => {
+    try {
     const sub = await PushSubscription.findOne({ user: userId });
+
     if (!sub) return;
     const result = await sendPush(sub.subscription, payload);
     if (result === 'expired') await PushSubscription.deleteOne({ user: userId });
+    } catch (err) {
+        console.error('Push error:', err);
+    }
 };
 
 export const notifyMandatory = async (req, res, next) => {
