@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
+import { avatarIcons } from '../../utils/avatarIcons';
 
 const links = [
     { to: '/',             icon: <LayoutDashboard size={18} />, label: 'Обзор' },
@@ -22,6 +23,9 @@ const links = [
 function NavLinks({ onClose }) {
   const navigate = useNavigate();
   const { user, logout } = useStore();
+
+  const AvatarIcon = 
+  avatarIcons[user?.avatar] || avatarIcons.user;
 
   const handleLogout = () => {
     logout();
@@ -84,7 +88,7 @@ function NavLinks({ onClose }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-2)', flexShrink: 0,
           }}>
-            {user?.avatar || user?.name?.[0]?.toUpperCase()}
+            {<AvatarIcon size={22} /> || user?.name?.[0]?.toUpperCase()}
           </div>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {user?.name}

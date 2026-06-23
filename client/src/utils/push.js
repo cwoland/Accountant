@@ -32,7 +32,7 @@ export const subscribeToPush = async () => {
 
     const subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUnit8Array(data.publicKey),
+      applicationServerKey: urlBase64ToUint8Array(data.publicKey),
     });
 
     console.log('Subscription created:', subscription);
@@ -55,9 +55,9 @@ export const unsubscribeFromPush = async () => {
     }
 };
 
-function urlBase64ToUnit8Array(base64String) {
+function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
-    return new Unit8Array([...rawData].map((c) => c.charCodeAt(0)));
+    return new Uint8Array([...rawData].map((c) => c.charCodeAt(0)));
 }

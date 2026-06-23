@@ -39,7 +39,7 @@ const Bubble = ({ msg }) => {
         </div>
       )}
       <div style={{
-        maxWidth: isMobile ? '90%' : '75%',
+        maxWidth: '90%',
         background: isAi ? 'var(--surface)' : 'var(--accent)',
         border: isAi ? '1px solid var(--border)' : 'none',
         borderRadius: isAi ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
@@ -75,6 +75,9 @@ const Bubble = ({ msg }) => {
 export default function AiPage() {
   const user = useStore((s) => s.user);
   const { categories } = useCategories();
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   const [messages, setMessages] = useState([
     {
       role: 'ai',
@@ -85,9 +88,10 @@ export default function AiPage() {
   const [loading, setLoading] = useState(false);
   const [activeQuick, setActiveQuick] = useState(null);
   const [catInput, setCatInput] = useState('');
+  const [vh, setVh] = useState(window.innerHeight);
   const bottomRef = useRef(null);
   const range = getMonthRange(0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
     window.addEventListener('resize', check);
@@ -108,7 +112,6 @@ export default function AiPage() {
     };
   }, [fullScreen]);
 
-  const [vh, setVh] = useState(window.innerHeight);
 
   useEffect(() => {
     const updateHeight = () => {

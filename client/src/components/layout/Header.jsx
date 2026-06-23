@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAccountsApi } from '../../api/accounts';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Bell, WifiOff } from 'lucide-react';
+import { Bell } from 'lucide-react';
 
 export default function Header() {
     const isOnline = useOnlineStatus();
@@ -84,22 +84,6 @@ export default function Header() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        {!isOnline && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 7,
-              background: 'var(--amber-dim)', padding: '5px 12px',
-              borderRadius: 99, border: '1px solid rgba(251,191,36,0.3)',
-            }}
-          >
-            <WifiOff size={13} color="var(--amber)" />
-            <span style={{ fontSize: '0.75rem', color: 'var(--amber)', fontWeight: 600 }}>
-              Офлайн {queueCount > 0 ? `· ${queueCount} в очереди` : ''}
-            </span>
-          </motion.div>
-        )}
 
         {activeAccount && (
           <div style={{
@@ -117,7 +101,7 @@ export default function Header() {
           </div>
         )}
 
-        {isOnline && queueCount > 0 && (
+        {queueCount > 0 && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{
