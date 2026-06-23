@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, Mail, Lock, Wallet, Globe, Save, Camera, Bell, BellOff } from 'lucide-react';
+import { User, Mail, Lock, Wallet, Globe, Save, Camera, Bell, BellOff, Briefcase, GraduationCap, Laptop, Shield, Crown, Rocket, Star, Gem, Trophy, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { updateProfileApi, changePasswordApi } from '../api/auth';
 import { subscribeToPush, unsubscribeFromPush } from '../utils/push';
@@ -19,7 +19,20 @@ const CURRENCIES = [
   { value: 'EUR', label: '🇪🇺 Евро (€)' },
 ];
 
-const AVATARS = ['👤','😊','🧑‍💻','👨‍💼','👩‍💼','🧑‍🎓','🦊','🐼','🦁','🐯','🦅','🌟'];
+const AVATARS = {
+  user: User,
+  briefcase: Briefcase,
+  graduation: GraduationCap,
+  laptop: Laptop,
+  shield: Shield,
+  crown: Crown,
+  rocket: Rocket,
+  star: Star,
+  wallet: Wallet,
+  gem: Gem,
+  trophy: Trophy,
+  heart: Heart,
+};
 
 export default function ProfilePage() {
   const { user, setUser } = useStore();
@@ -118,7 +131,10 @@ export default function ProfilePage() {
                 fontSize: profileForm.avatar ? '2.2rem' : '1.6rem',
                 cursor: 'pointer', userSelect: 'none',
               }} onClick={() => setShowAvatarPicker((v) => !v)}>
-                {profileForm.avatar || <User size={28} color="var(--accent-2)" />}
+                {(() => {
+                  const AvatarIcon = AVATARS[profileForm.avatar];
+                  return AvatarIcon ? <AvatarIcon size={30} color="var(--accent)" /> : <User size={28} color="var(--accent" />;
+                })()}
               </div>
               <div style={{
                 position: 'absolute', bottom: 0, right: 0,
@@ -148,16 +164,16 @@ export default function ProfilePage() {
                 border: '1px solid var(--border)',
                 display: 'flex', flexWrap: 'wrap', gap: 8,
               }}>
-              {AVATARS.map((a) => (
-                <button key={a} onClick={() => { setProfileForm((f) => ({ ...f, avatar: a })); setShowAvatarPicker(false); }}
+              {Object.entries(AVATARS).map(([key, Icon]) => (
+                <button key={key} onClick={() => { setProfileForm((f) => ({ ...f, avatar: key })); setShowAvatarPicker(false); }}
                   style={{
                     width: 40, height: 40, borderRadius: 'var(--radius-s)',
                     fontSize: '1.4rem', cursor: 'pointer',
-                    background: profileForm.avatar === a ? 'var(--accent-dim)' : 'var(--surface)',
-                    border: profileForm.avatar === a ? '2px solid var(--accent)' : '2px solid transparent',
+                    background: profileForm.avatar === key ? 'var(--accent-dim)' : 'var(--surface)',
+                    border: profileForm.avatar === key ? '2px solid var(--accent)' : '2px solid transparent',
                     transition: 'var(--transition)',
                   }}>
-                  {a}
+                  <Icon size={20} />
                 </button>
               ))}
               <button onClick={() => { setProfileForm((f) => ({ ...f, avatar: '' })); setShowAvatarPicker(false); }}

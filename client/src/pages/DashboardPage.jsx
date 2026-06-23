@@ -153,6 +153,28 @@ export default function DashboardPage() {
     ? Math.min((expense / user.monthlyBudget) * 100, 100)
     : null;
 
+  const budgetRemaining = 
+  Math.max(
+    (user?.monthlyBudget || 0) - expense,
+    0
+  );
+
+  const today = new Date();
+
+  const daysPassed = today.getDate();
+
+  const daysInMonth = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0
+  ).getDate();
+
+  const avgPerDay = daysPassed > 0 ? expense / daysPassed : 0;
+
+  const forecastExpense = avgPerDay * daysInMonth;
+
+  const forecastPercent = user?.monthlyBudget ? (forecastExpense / user.monthlyBudget) * 100 : 0;
+
   const statCards = [
     {
       label: 'Баланс',
@@ -338,6 +360,16 @@ export default function DashboardPage() {
                 color: budgetUsed > 90 ? 'var(--red)' : budgetUsed > 70 ? 'var(--amber)' : 'var(--green)',
               }}>
                 {budgetUsed.toFixed(0)}%
+                <p style={{
+                  marginTop: 4,
+                  fontSize: '0.78rem',
+                  color: 'var(--text-3)',
+                }}>Осталось{' '}
+                {formatCurrency(
+                  budgetRemaining,
+                  user?.currency
+                )}
+                </p>
               </span>
             </div>
             <div style={{ height: 8, background: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
@@ -355,6 +387,52 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
       )}
+
+      <motion.div variants={FADE}>
+        <Card>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+          }}>
+            <div>
+              <p style={{
+                fontWeight: 700,
+                fontSize: '0.9rem',
+              }}>Прогноз месяца</p>
+              <p style={{
+                color: 'var(--text-3)',
+                fontSize: '0.8rem',
+                marginTop: 4,
+              }}>
+                Средний расход:
+                {' '}
+                {formatCurrency(
+                  avgPerDay,
+                  user?.currency
+                )} /день
+              </p>
+          </div>
+          <div style={{
+            textAlign: 'right',
+          }}>
+            <p style={{
+              fontWeight: 700, fontSize: '1.15rem',
+            }}>
+              {formatCurrency(
+                forecastExpense,
+                user?.currency
+              )}
+            </p>
+            <p style={{
+              fontSize: '0.8rem',
+              color: forecastPercent > 100 ? 'var(--red)' : 'var(--green)',
+            }}>
+              {forecastPercent.toFixed(0)}% бюджета
+            </p>
+          </div>
+          </div>
+        </Card>
+      </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 16 }}>
         <motion.div variants={FADE}>
