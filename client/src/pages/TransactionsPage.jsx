@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Pencil, Filter, ArrowUpRight, ArrowDownRight, Search, Receipt } from 'lucide-react';
 import useTransactions from '../hooks/useTransactions';
@@ -27,11 +27,11 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const params = {
+  const params = useMemo(() => ({
     page, limit: 15,
     ...(typeFilter && { type: typeFilter }),
     ...(catFilter && { category: catFilter }),
-  };
+  }), [page, typeFilter, catFilter]);
 
   const { transactions, pagination, isLoading, create, update, remove } = useTransactions(params);
   const { categories } = useCategories();

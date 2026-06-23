@@ -6,6 +6,7 @@ import {
   updateTransactionApi,
   deleteTransactionApi,
 } from '../api/transactions';
+import { Key } from 'lucide-react';
 
 export default function useTransactions(params = {}) {
   const qc = useQueryClient();
@@ -16,14 +17,66 @@ export default function useTransactions(params = {}) {
   });
 
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ['transactions'] });
+    qc.invalidateQueries({ queryKey: ['transactions'], exact: false });
     qc.invalidateQueries({ queryKey: ['stats'] });
   };
 
   const create = useMutation({
     mutationFn: createTransactionApi,
-    onSuccess: () => { toast.success('Транзакция добавлена'); invalidate(); },
-    onError: (e) => toast.error(e.response?.data?.message || 'Ошибка'),
+
+    onMutate: (newTransaction) => {
+      await qc.cancelQueries({ queryKey: ['transactions'] });
+
+      const previousQueries = qc.getQueriesData({
+        queryKey: ['transactions'],
+      });
+
+      qc.setQueriesData(
+        { queryKey: ['transactions'] },
+        (old) => {
+          if (!old) return old;
+
+          const optimisticTx = {
+            ...newTransaction,
+            _id: `temp-${Date.now()}`,
+            category:
+            typeof newTransaction.category === 'string' ? { _id: newTransaction.category } : newTransaction.category,
+            createdAt: new Date().toISOString(),
+          };
+
+          return {
+            ...old,
+            transactions: [
+              optimisticTx,
+              ...(old.transactions || []),
+            ],
+            pagination: {
+              ...old.pagination,
+              total: (old.pagination?.total || 0) + 1,
+            },
+          };
+        }
+      );
+
+      return { previousQueries };
+    },
+
+    onError: (err, variables, context) => {
+      context?.previousQueries?.forEach(([key, data]) => {
+        qc.setQueryData(key, data);
+      });
+
+      toast.error(err.response?.data?.message || 'Ошибка');
+    },
+
+    onSuccess: () => { toast.success('Транзакция добавлена'); },
+
+    onSettled: () => {
+      qc.invalidateQueries({
+        queryKey: ['transactions'],
+        exact: false,
+      });
+    },
   });
 
   const update = useMutation({
