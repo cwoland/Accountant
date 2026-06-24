@@ -18,6 +18,7 @@ import Badge from '../components/ui/Badge';
 import AccountChat from '../components/AccountChat';
 import Loader from '../components/ui/Loader';
 import EmptyState from '../components/ui/EmptyState';
+import { avatarIcons } from '../utils/avatarIcons';
 
 const FADE = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
 
@@ -30,6 +31,11 @@ export default function AccountsPage() {
     const [userResults, setUserResults] = useState([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const searchTimer = useRef(null);
+
+    const renderAvatar = (avatarName, size = 22) => {
+      const Icon = avatarIcons[avatarName] || avatarIcons.user;
+      return <Icon size={size} />;
+    }
 
     const { data: accounts = [], isLoading } = useQuery({
         queryKey: ['accounts'],
@@ -49,7 +55,7 @@ export default function AccountsPage() {
 
     const create = useMutation({
         mutationFn: createAccountApi,
-        onSuccess: () => { toast.success('Счёт создан'); invalidate(); setModal(false); setForm: ({ name: '', inviteEmail: '' }); setSelectedUser(null); setUserSearch(''); setSearchResults([]); },
+        onSuccess: () => { toast.success('Счёт создан'); invalidate(); setModal(false); setForm({ name: '', inviteEmail: '' }); setUserSearch(''); setUserResults([]); },
         onError: (e) => toast.error(e.response?.data?.message || 'Ошибка'),
     });
 
@@ -66,7 +72,7 @@ export default function AccountsPage() {
 
     const leave = useMutation({
         mutationFn: leaveAccountApi,
-        onSuccess: () => { toast.success('Вы покинули счёт'); setActiveAccount: null; invalidate(); },
+        onSuccess: () => { toast.success('Вы покинули счёт'); setActiveAccount(null); invalidate(); },
     });
 
     const remove = useMutation({
@@ -181,7 +187,7 @@ export default function AccountsPage() {
       {isLoading ? <Loader text="Загружаем счета..." /> : (
         accounts.length === 0
           ? <EmptyState
-              icon={<Users size={22} color={acc.color} />}
+              icon={<Users size={22} color="var(--text-3)" />}
               title="Нет совместных счетов"
               description="Создайте совместный счёт и пригласите партнёра, члена семьи или друга."
               action={() => setModal(true)}
@@ -227,7 +233,7 @@ export default function AccountsPage() {
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '0.6rem', fontWeight: 700, color: 'var(--accent-2)',
                               }}>
-                                {acc.owner.avatar || acc.owner.name?.[0]}
+                              {renderAvatar(acc.owner.avatar)}
                               </div>
                               <span style={{ fontSize: '0.78rem', color: 'var(--text-2)' }}>
                                 {acc.owner.name} {owner ? '(вы)' : ''}
@@ -242,7 +248,7 @@ export default function AccountsPage() {
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   fontSize: '0.6rem', fontWeight: 700, color: 'var(--green)',
                                 }}>
-                                  {m.user.avatar || m.user.name?.[0]}
+                                  {renderAvatar(m.user.avatar)}
                                 </div>
                                 <span style={{ fontSize: '0.78rem', color: 'var(--text-2)' }}>
                                   {m.user.name}
@@ -350,7 +356,7 @@ export default function AccountsPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-2)', flexShrink: 0,
               }}>
-                {u.avatar || u.name?.[0]?.toUpperCase()}
+                {renderAvatar(u.avatar)}
               </div>
               <div style={{ textAlign: 'left' }}>
                 <p style={{ fontWeight: 600, fontSize: '0.875rem' }}>{u.name}</p>

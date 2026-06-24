@@ -19,11 +19,13 @@ import { formatCurrency, getMonthRange } from '../utils/formatters';
 
 export default function MandatoryPage() {
   const user = useStore((s) => s.user);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [modal, setModal] = useState(false);
   const [hideTarget, setHideTarget] = useState(null);
   const range = getMonthRange(0);
   const { mandatoryCategories } = useCategories();
-  const { transactions, create, isLoading } = useTransactions({ ...range, limit: 100 });
+  const { transactions, create, isLoading } = useTransactions({ ...range, limit: 100, ...(activeAccountId && { accountId: activeAccountId, }), });
+  const activeAccountId = useStore((s) => s.activeAccountId);
   const qc = useQueryClient();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -53,7 +55,7 @@ export default function MandatoryPage() {
     return acc + paid;
   }, 0);
 
-  const handleAdd = (data) => create.mutate(data, { onSuccess: () => setModal(false) });
+  const handleAdd = (data) => create.mutate(data, { onSuccess: () => { setModal(false); setSelectedCategory(null); }, });
 
   const stats = {
     total: mandatoryCategories.length,
@@ -96,7 +98,8 @@ return (
         },
       ].map((c, i) => (
         <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
-          <Card style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Card
+           style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{
               width: 44, height: 44, borderRadius: 'var(--radius-m)',
               background: c.bg, color: c.color, flexShrink: 0,
@@ -133,7 +136,12 @@ return (
             <motion.div key={cat._id}
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}>
-              <Card style={{
+              <Card 
+              onClick={() => {
+              setSelectedCategory(cat);
+              setModal(true);
+              }}
+              style={{
                 border: isPaid
                   ? '1px solid rgba(34,211,165,0.25)'
                   : '1px solid var(--border)',
@@ -227,7 +235,7 @@ return (
 
     <Modal open={modal} onClose={() => setModal(false)} title="Добавить обязательный платёж">
       <TransactionForm
-        initial={{ type: 'expense', amount: '', category: '', description: '',
+        initial={{ type: 'expense', amount: '', category: selectedCategory?._id || '', description: selectedCategory?.name || '',
           date: new Date().toISOString().slice(0, 10), isRecurring: true, recurringPeriod: 'monthly' }}
         onSubmit={handleAdd}
         loading={create.isPending}

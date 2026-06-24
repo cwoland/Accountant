@@ -30,6 +30,8 @@ export default function LoginPage() {
     };
 
     const handleSubmit = async (e) => {
+        if (loading) return; 
+        
         e.preventDefault();
         if (!validate()) return;
         setLoading(true);

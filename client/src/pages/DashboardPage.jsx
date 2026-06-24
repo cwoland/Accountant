@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, Wallet, ChevronLeft, ChevronRight, Calendar, ArrowUpRight,
@@ -105,6 +105,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const user = useStore((s) => s.user);
+  const activeAccountId = useStore((s) => s.activeAccountId);
   const [monthOffset, setMonthOffset] = useState(0);
   const [customRange, setCustomRange] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -121,14 +122,14 @@ export default function DashboardPage() {
   }, []);
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['stats', range],
-    queryFn: () => getStatsApi(range).then((r) => r.data),
+    queryKey: ['stats', range, activeAccountId],
+    queryFn: () => getStatsApi({ ...range, accountId: activeAccountId, }).then((r) => r.data),
   });
 
   const { data: txData, isLoading: txLoading } = useQuery({
-    queryKey: ['transactions-recent'],
+    queryKey: ['transactions-recent', activeAccountId],
     queryFn: () =>
-      getTransactionsApi({ limit: 5, sortBy: 'date', order: 'desc' }).then((r) => r.data),
+      getTransactionsApi({ limit: 5, sortBy: 'date', order: 'desc', accountId: activeAccountId, }).then((r) => r.data),
   });
 
   if (statsLoading) return <Loader text="Загружаем данные..." />;
@@ -523,10 +524,10 @@ export default function DashboardPage() {
         <Card>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>Последние транзакции</p>
-            <a href="/transactions" style={{ fontSize: '0.8rem', color: 'var(--accent-2)',
+            <Link to="/transactions" style={{ fontSize: '0.8rem', color: 'var(--accent-2)',
               display: 'flex', alignItems: 'center', gap: 4 }}>
               Все <ArrowUpRight size={14} />
-            </a>
+            </Link>
           </div>
           {txLoading
             ? <Loader size={24} />
@@ -582,7 +583,7 @@ export default function DashboardPage() {
       </motion.div>
 
       <motion.div variants={FADE}>
-        <a href="/ai" style={{ textDecoration: 'none', display: 'block' }}>
+        <Link to="/ai" style={{ textDecoration: 'none', display: 'block' }}>
           <Card hover style={{
             background: 'linear-gradient(135deg, var(--accent-dim), var(--surface))',
             border: '1px solid rgba(124,106,247,0.25)',
@@ -607,7 +608,7 @@ export default function DashboardPage() {
               <ArrowUpRight size={20} color="var(--accent-2)" style={{ marginLeft: 'auto', flexShrink: 0 }} />
             </div>
           </Card>
-        </a>
+        </Link>
       </motion.div>
     </motion.div>
   );

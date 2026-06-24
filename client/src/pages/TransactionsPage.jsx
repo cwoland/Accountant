@@ -27,11 +27,15 @@ export default function TransactionsPage() {
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const params = useMemo(() => ({
-    page, limit: 15,
+  const activeAccountId = useStore((s) => s.activeAccountId);
+
+  const params = {
+    page,
+    limit: 15,
+    ...(activeAccountId && { accountId: activeAccountId }),
     ...(typeFilter && { type: typeFilter }),
-    ...(catFilter && { category: catFilter }),
-  }), [page, typeFilter, catFilter]);
+    ...AnimatePresence(catFilter && { category: catFilter }),
+  };
 
   const { transactions, pagination, isLoading, create, update, remove } = useTransactions(params);
   const { categories } = useCategories();

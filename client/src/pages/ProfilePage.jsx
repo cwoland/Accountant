@@ -50,6 +50,8 @@ export default function ProfilePage() {
   const [pushEnabled, setPushEnabled] = useState(false);
 
   useEffect(() => {
+    if (!navigator.serviceWorker) return;
+
     navigator.serviceWorker?.ready.then(async (reg) => {
       const sub = await reg.pushManager.getSubscription();
       setPushEnabled(!!sub);
@@ -57,7 +59,19 @@ export default function ProfilePage() {
   }, []);
 
   const setP = (f) => (e) => setProfileForm((prev) => ({ ...prev, [f]: e.target ? e.target.value : e }));
-  const setPw = (f) => (e) => setPwForm((prev) => ({ ...prev, [f]: e.target.value }));
+  const setPw = (f) => (e) => { setPwForm((prev) => ({ ...prev, [f]: e.target.value }));
+  setPwErrors((prev) => ({
+    ...prev,
+    [field]: undefined,
+  }));
+};
+
+  const budget = Number(profileForm.monthlyBudget);
+
+  if (Number.isNaN(budget)) {
+    toast.error('Введите корректный бюджет');
+    return;
+  }
 
   const handleProfile = async (e) => {
     e.preventDefault();
@@ -133,7 +147,7 @@ export default function ProfilePage() {
               }} onClick={() => setShowAvatarPicker((v) => !v)}>
                 {(() => {
                   const AvatarIcon = AVATARS[profileForm.avatar];
-                  return AvatarIcon ? <AvatarIcon size={30} color="var(--accent)" /> : <User size={28} color="var(--accent" />;
+                  return AvatarIcon ? <AvatarIcon size={30} color="var(--accent)" /> : <User size={28} color="var(--accent)" />;
                 })()}
               </div>
               <div style={{

@@ -5,7 +5,7 @@ import { registerSW } from 'virtual:pwa-register';
 import App from './App';
 import './index.css';
 
-registerSW({
+ registerSW({
   immediate: true,
 });
 

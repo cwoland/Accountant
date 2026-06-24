@@ -39,7 +39,7 @@ export const getStats = async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
 
-    const match = { user: req.user._id };
+    const match = accountId ? { account: accountId } : { user: req.user._id, account: null };
     if (startDate || endDate) {
       match.date = {};
       if (startDate) match.date.$gte = new Date(startDate);
@@ -88,7 +88,7 @@ export const getStats = async (req, res, next) => {
     ]);
 
     const monthly = await Transaction.aggregate([
-      { $match: { user: req.user._id } },
+      { $match: match },
       {
         $group: {
           _id: {

@@ -24,13 +24,14 @@ const classify = (tx) => {
 
 export default function ProductsPage() {
   const user = useStore((s) => s.user);
+  const activeAccountId = useStore((s) => s.activeAccountId);
   const [modal, setModal] = useState(false);
   const [tab, setTab] = useState('all');
   const [search, setSearch] = useState('');
   const range = getMonthRange(0);
 
   const { transactions, create, isLoading } = useTransactions({
-    ...range, type: 'expense', limit: 100,
+    ...range, type: 'expense', limit: 100, accountId: activeAccountId || undefined,
   });
 
   const handleAdd = (data) => create.mutate(data, { onSuccess: () => setModal(false) });

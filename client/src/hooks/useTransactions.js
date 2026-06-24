@@ -16,6 +16,8 @@ export default function useTransactions(params = {}) {
     queryFn: () => getTransactionsApi(params).then((r) => r.data),
   });
 
+  console.log('TRANSACTIONS DATA', data);
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['transactions'], exact: false });
     qc.invalidateQueries({ queryKey: ['stats'] });
@@ -24,7 +26,7 @@ export default function useTransactions(params = {}) {
   const create = useMutation({
     mutationFn: createTransactionApi,
 
-    onMutate: (newTransaction) => {
+    onMutate: async (newTransaction) => {
       await qc.cancelQueries({ queryKey: ['transactions'] });
 
       const previousQueries = qc.getQueriesData({
@@ -74,6 +76,11 @@ export default function useTransactions(params = {}) {
     onSettled: () => {
       qc.invalidateQueries({
         queryKey: ['transactions'],
+        exact: false,
+      });
+
+      qc.invalidateQueries({
+        queryKey: ['stats'],
         exact: false,
       });
     },
