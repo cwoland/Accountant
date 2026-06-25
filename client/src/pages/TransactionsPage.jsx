@@ -34,7 +34,7 @@ export default function TransactionsPage() {
     limit: 15,
     ...(activeAccountId && { accountId: activeAccountId }),
     ...(typeFilter && { type: typeFilter }),
-    ...AnimatePresence(catFilter && { category: catFilter }),
+    ...(catFilter && { category: catFilter }),
   };
 
   const { transactions, pagination, isLoading, create, update, remove } = useTransactions(params);
@@ -47,7 +47,7 @@ export default function TransactionsPage() {
     : transactions;
 
   const handleAdd = (data, meta) => {
-    if (meta?.online) {
+    if (meta?.offline) {
       setModal(null);
       return;
     }

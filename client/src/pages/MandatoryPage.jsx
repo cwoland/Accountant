@@ -19,13 +19,13 @@ import { formatCurrency, getMonthRange } from '../utils/formatters';
 
 export default function MandatoryPage() {
   const user = useStore((s) => s.user);
+  const activeAccountId = useStore((s) => s.activeAccountId);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modal, setModal] = useState(false);
   const [hideTarget, setHideTarget] = useState(null);
   const range = getMonthRange(0);
   const { mandatoryCategories } = useCategories();
   const { transactions, create, isLoading } = useTransactions({ ...range, limit: 100, ...(activeAccountId && { accountId: activeAccountId, }), });
-  const activeAccountId = useStore((s) => s.activeAccountId);
   const qc = useQueryClient();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 

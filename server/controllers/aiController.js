@@ -1,7 +1,7 @@
 import { pushToUser } from './pushController.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'openai/gpt-oss-120b:free';
+const MODEL = 'meta-llama/llama-3.1-8b-instruct:free';
 
 const callAI = async (messages) => {
   const res = await fetch(OPENROUTER_URL, {

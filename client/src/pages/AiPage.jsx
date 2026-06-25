@@ -290,7 +290,7 @@ export default function AiPage() {
         <div>
           <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>ИИ-советник</h2>
           <p style={{ color: 'var(--text-3)', fontSize: '0.82rem', marginTop: 2 }}>
-            Powered by GPT OSS 120B · OpenRouter
+            Powered by LLAMA 3.1 · OpenRouter
           </p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8,
