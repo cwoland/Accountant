@@ -29,6 +29,9 @@ export default function TransactionsPage() {
 
   const activeAccountId = useStore((s) => s.activeAccountId);
 
+  console.log('[TransactionsPage] activeAccountId:', activeAccountId);
+  console.log('[TransactionsPage] params:', params);
+
   const params = {
     page,
     limit: 15,

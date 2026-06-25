@@ -5,7 +5,7 @@ export const getTransactions = async (req, res, next) => {
     const { type, category, startDate, endDate, page = 1,
       limit = 20, sortBy = 'date', order = 'desc', accountId } = req.query;
 
-    const filter = accountId ? { account: accountId } : { user: req.user._id, account: null };
+    const filter = accountId ? { account: accountId } : { user: req.user._id, $or: [{ account: null}, { account: { $exists: false } }], };
     if (type) filter.type = type;
     if (category) filter.category = category;
     if (startDate || endDate) {
@@ -30,6 +30,11 @@ export const getTransactions = async (req, res, next) => {
         limit: Number(limit),
       },
     });
+
+    if (total === 0 && !accountId) {
+      const debugAll = await Transaction.find({ user: req.user._id }).limit(5);
+      console.log('[DEBUG] Transactions by user (no account filter):', debugAll.length, debugAll.map(t => ({ id: t._id, account: t.account })));
+    }
   } catch (err) {
     next(err);
   }

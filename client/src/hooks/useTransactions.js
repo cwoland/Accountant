@@ -6,7 +6,6 @@ import {
   updateTransactionApi,
   deleteTransactionApi,
 } from '../api/transactions';
-import { Key } from 'lucide-react';
 
 export default function useTransactions(params = {}) {
   const qc = useQueryClient();
