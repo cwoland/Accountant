@@ -29,9 +29,6 @@ export default function TransactionsPage() {
 
   const activeAccountId = useStore((s) => s.activeAccountId);
 
-  console.log('[TransactionsPage] activeAccountId:', activeAccountId);
-  console.log('[TransactionsPage] params:', params);
-
   const params = {
     page,
     limit: 15,
@@ -39,6 +36,9 @@ export default function TransactionsPage() {
     ...(typeFilter && { type: typeFilter }),
     ...(catFilter && { category: catFilter }),
   };
+
+  console.log('[TransactionsPage] activeAccountId:', activeAccountId);
+  console.log('[TransactionsPage] params:', params);
 
   const { transactions, pagination, isLoading, create, update, remove } = useTransactions(params);
   const { categories } = useCategories();

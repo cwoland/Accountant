@@ -54,6 +54,7 @@ export default function useTransactions(params = {}) {
             pagination: {
               ...old.pagination,
               total: (old.pagination?.total || 0) + 1,
+              pages: Math.ceil(((old.pagination?.total || 0) + 1) / (old.pagination?.limit || 15)),
             },
           };
         }

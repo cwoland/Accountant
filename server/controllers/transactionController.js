@@ -5,7 +5,17 @@ export const getTransactions = async (req, res, next) => {
     const { type, category, startDate, endDate, page = 1,
       limit = 20, sortBy = 'date', order = 'desc', accountId } = req.query;
 
-    const filter = accountId ? { account: accountId } : { user: req.user._id, $or: [{ account: null}, { account: { $exists: false } }], };
+    const filter = accountId ? { account: accountId, user: req.user._id } : { user: req.user._id };
+    if (!accountId) {
+      filter.$or = [{ account: null }, { account: { $exists: false } }];
+    }
+
+    const debugAll = await Transaction.find({ user: req.user._id }).select('account user').lean();
+    console.log('[DEBUG] user id:', String(req.user._id));
+    console.log('[DEBUG] all tx for user (no account filter):', debugAll.length);
+    console.log('[DEBUG] account values:', debugAll.map(t => ({ id: t._id, account: t.account })));
+    console.log('[DEBUG] filter being used:', JSON.stringify(filter));
+
     if (type) filter.type = type;
     if (category) filter.category = category;
     if (startDate || endDate) {
@@ -44,7 +54,7 @@ export const getStats = async (req, res, next) => {
   try {
     const { startDate, endDate, accountId } = req.query;
 
-    const match = accountId ? { account: accountId } : { user: req.user._id, account: null };
+    const match = accountId ? { account: accountId } : { user: req.user._id };
     if (startDate || endDate) {
       match.date = {};
       if (startDate) match.date.$gte = new Date(startDate);
