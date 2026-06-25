@@ -15,8 +15,6 @@ export default function useTransactions(params = {}) {
     queryFn: () => getTransactionsApi(params).then((r) => r.data),
   });
 
-  console.log('TRANSACTIONS DATA', data);
-
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['transactions'], exact: false });
     qc.invalidateQueries({ queryKey: ['stats'] });

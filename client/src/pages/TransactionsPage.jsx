@@ -37,9 +37,6 @@ export default function TransactionsPage() {
     ...(catFilter && { category: catFilter }),
   };
 
-  console.log('[TransactionsPage] activeAccountId:', activeAccountId);
-  console.log('[TransactionsPage] params:', params);
-
   const { transactions, pagination, isLoading, create, update, remove } = useTransactions(params);
   const { categories } = useCategories();
 

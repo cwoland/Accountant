@@ -11,10 +11,6 @@ export const getTransactions = async (req, res, next) => {
     }
 
     const debugAll = await Transaction.find({ user: req.user._id }).select('account user').lean();
-    console.log('[DEBUG] user id:', String(req.user._id));
-    console.log('[DEBUG] all tx for user (no account filter):', debugAll.length);
-    console.log('[DEBUG] account values:', debugAll.map(t => ({ id: t._id, account: t.account })));
-    console.log('[DEBUG] filter being used:', JSON.stringify(filter));
 
     if (type) filter.type = type;
     if (category) filter.category = category;
