@@ -32,29 +32,8 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/accountant-server.*\.onrender\.com\/api\/transactions/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'transactions-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/accountant-server.*\.onrender.com\/api\/categories/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'categories-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/accountant-server.*\.onrender\.com\/api\/transactions\/stats/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'stats-cache',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 },
-              networkTimeoutSeconds: 5,
-            },
+            urlPattern: ({ url }) => url.pathname.startsWith('/api'),
+            handler: 'NetworkOnly',
           },
         ],
       },
