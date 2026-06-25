@@ -37,7 +37,7 @@ export const getTransactions = async (req, res, next) => {
 
 export const getStats = async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, accountId } = req.query;
 
     const match = accountId ? { account: accountId } : { user: req.user._id, account: null };
     if (startDate || endDate) {

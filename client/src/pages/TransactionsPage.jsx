@@ -51,8 +51,14 @@ export default function TransactionsPage() {
       setModal(null);
       return;
     }
-    create.mutate(data, { onSuccess: () => setModal(null) });
+    create.mutate({
+      ...data,
+      accountId: activeAccountId || null,
+    }, {
+      onSuccess: () => setModal(null),
+    });
   };
+
   const handleEdit = (data) => update.mutate(
     { id: editing._id, data },
     { onSuccess: () => { setModal(null); setEditing(null); } }
