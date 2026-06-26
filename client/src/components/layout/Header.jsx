@@ -2,25 +2,38 @@ import useOnlineStatus from '../../hooks/useOnlineStatus';
 import { getQueueCount } from '../../utils/offlineQueue';
 import { useState, useEffect } from 'react';
 import useStore from '../../store/useStore';
+import useNotificationStore from '../../store/useNotificationStore';
 import { useQuery } from '@tanstack/react-query';
 import { getAccountsApi } from '../../api/accounts';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
+import NotificationCenter from './NotificationCenter';
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+}
 
 export default function Header() {
     const isOnline = useOnlineStatus();
     const [queueCount, setQueueCount] = useState(0);
+    const [notifOpen, setNotifOpen] = useState(false);
+    const bellRef = useRef(null);
     const navigate = useNavigate();
+    const isMobile = useIsMobile();
+    const unreadCount = useNotificationStore((s) => s.unreadCount);
+    const markAllRead = useNotificationStore((s) => s.markAllRead);
 
     useEffect(() => {
         const check = async () => {
-          try {
-            const count = await getQueueCount();
-            setQueueCount(count);
-          } catch {
-            setQueueCount(0);
-          }
+          try { setQueueCount(await getQueueCount()); }
+          catch { setQueueCount(0); }
         };
         check();
         const interval = setInterval(check, 5000);
@@ -50,11 +63,15 @@ export default function Header() {
     };
 
     const page = titles[pathname] || { label: 'Accountant', sub: ''};
-    const now = new Date();
-    const hour = now.getHours();
+    const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Доброе утро'
     : hour < 18 ? 'Добрый день'
     : 'Добрый вечер';
+
+    const handleBellClick = () => {
+      setNotifOpen((v) => !v);
+      if (!notifOpen) markAllRead();
+    };
     
     return (
         <motion.header
@@ -68,6 +85,7 @@ export default function Header() {
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '0 32px',
+            paddingTop: 'env(safe-area-inset-top)',
             borderBottom: '1px solid var(--border)',
             background: 'var(--bg)',
             position: 'sticky',
@@ -126,22 +144,95 @@ export default function Header() {
             {user?.name?.split(' ')[0]}
           </span>
         </p>
-        <div style={{
-            width: 36, height: 36,
+        <div style={{ position: 'relative' }}>
+          <div ref={bellRef}
+          onClick={handleBellClick}
+          style={{
+            width: 36,
+            height: 36,
             borderRadius: '50%',
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--text-3)', cursor: 'pointer',
+            background: notifOpen ? 'var(--accent-dim)' : 'var(--surface)',
+            border: `1px solid ${notifOpen ? 'var(--accent)' : 'var(--border)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: notifOpen ? 'var(--accent-2)' : 'var(--text-3)',
+            cursor: 'pointer',
             transition: 'var(--transition)',
-            }}
-            onClick={() => navigate('/profile')}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-          <Bell size={16} />
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = 'var(--accent)';
+            e.currentTarget.style.color = 'var(--accent-2)';
+          }}
+          onMouseLeave={e => {
+            if (!notifOpen) {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.color = 'var(--text-3)';
+            }
+          }}>
+            <Bell size={16} />
+            {unreadCount > 0 && (
+              <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              style={{
+                position: 'absolute',
+                top: -3,
+                right: -3,
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                background: 'var(--accent)',
+                color: '#fff', 
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid var(--bg)',
+              }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </motion.span>
+            )}
+          </div>
+
+          {!isMobile && (
+            <NotificationCenter
+            open={notifOpen}
+            onClose={() => setNotifOpen(false)}
+            anchorRef={bellRef}
+            isMobile={false} />
+          )}
+        </div>
+
+        <div style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--text-3)',
+          cursor: 'pointer',
+          transition: 'var(--transition)',
+        }}
+        onClick={() => navigate('/profile')}
+        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-2)' }}>
+            {user?.name?.[0]?.toUpperCase() || '?'}
+          </span>
         </div>
       </div>        
 
-            </motion.header>
+      {isMobile && (
+        <NotificationCenter
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        isMobile={true} />
+      )}
+    </motion.header>
     );
 }

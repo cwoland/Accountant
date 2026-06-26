@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import useSyncQueue from './hooks/useSyncQueue';
-import useStore from './store/useStore';
-import WakeUpBanner  from './components/ui/WakeUpBanner';
-import InstallBanner from './components/ui/InstallBanner';
+import useSyncQueue    from './hooks/useSyncQueue';
+import useStore        from './store/useStore';
+import WakeUpBanner    from './components/ui/WakeUpBanner';
+import InstallBanner   from './components/ui/InstallBanner';
+import usePushListener from './hooks/usePushListener';
 
 import LoginPage        from './pages/auth/LoginPage';
 import RegisterPage     from './pages/auth/RegisterPage';
@@ -34,6 +35,7 @@ function GuestRoute({ children }) {
 }
 
 export default function App() {
+  usePushListener();
   return (
     <BrowserRouter>
      <SyncManager />
@@ -56,6 +58,7 @@ export default function App() {
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />
+        <Route path="/widget" element={<Widget />} />
       </Routes>
     </BrowserRouter>
   );

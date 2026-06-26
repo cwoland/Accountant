@@ -2,6 +2,12 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
   const data = event.data.json();
 
+  self.clients.matchAll({ type: 'window' }).then((clientList) => {
+    clientList.forEach((client) => 
+    client.postMessage({ type: 'PUSH_RECEIVED', notification: data })
+  );
+  });
+
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,

@@ -116,11 +116,14 @@ function NavLinks({ onClose }) {
 function DesktopSidebar() {
   return (
     <aside style={{
-      gridColumn: 1, gridRow: '1 / 3',
+      gridColumn: 1, 
+      gridRow: '1 / 3',
       background: 'var(--bg-2)',
       borderRight: '1px solid var(--border)',
       display: 'flex', flexDirection: 'column',
       padding: '0 12px',
+      paddingTop: 'env(safe-area-inset-top)',
+      paddingBottom: 'env(safe-area-inset-bottom)',
       position: 'sticky', top: 0,
       height: '100vh', zIndex: 100,
     }}
@@ -175,7 +178,10 @@ function MobileDrawer({ open, onClose }) {
               background: 'var(--bg-2)',
               borderRight: '1px solid var(--border)',
               display: 'flex', flexDirection: 'column',
-              padding: '0 12px', overflow: 'hidden',
+              padding: '0 12px', 
+              paddingTop: 'env(safe-area-inset-top)',
+              paddingBottom: 'env(safe-area-inset-bottom)',
+              overflow: 'hidden',
             }}
           >
             <div style={{
@@ -215,7 +221,9 @@ export function MobileTopBar({ onOpen }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 16px', height: 'var(--header-h)',
+      padding: '0 16px', 
+      paddingTop: 'env(safe-area-inset-top)',
+      height: 'calc(var(--header-h) + env(safe-area-inset-top))',
       background: 'var(--bg)', borderBottom: '1px solid var(--border)',
       position: 'sticky', top: 0, zIndex: 200,
       width: '100%', overflow: 'hidden',

@@ -1,17 +1,22 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  TrendingUp, TrendingDown, Wallet, ChevronLeft, ChevronRight, Calendar, ArrowUpRight,
+  Plus, Pencil, Check, X as XIcon, TrendingUp, TrendingDown, Wallet, ChevronLeft, ChevronRight, Calendar, ArrowUpRight,
   ArrowDownRight, Sparkles, BarChart2, Receipt, Lightbulb, PieChart as PieChartIcon
 } from 'lucide-react';
 import {
   AreaChart, Area, PieChart, Pie, Cell,
   ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
 } from 'recharts';
+import { getBudgetApi, setBudgetApi } from '../api/budget';
 import { getStatsApi, getTransactionsApi } from '../api/transactions';
 import { formatCurrency, getMonthRange } from '../utils/formatters';
+import TransactionForm from '../components/TransactionForm';
+import Modal from '../components/ui/Modal';
+import useTransactions from '../hooks/useTransactions';
+import toast from 'react-hot-toast';
 import useStore from '../store/useStore';
 import Loader from '../components/ui/Loader';
 import Card from '../components/ui/Card';
@@ -103,7 +108,6 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function DashboardPage() {
-  const navigate = useNavigate();
   const user = useStore((s) => s.user);
   const activeAccountId = useStore((s) => s.activeAccountId);
   const [monthOffset, setMonthOffset] = useState(0);
@@ -114,6 +118,34 @@ export default function DashboardPage() {
   const monthLabel = customRange ? `${startDate} - ${endDate}` : new Date(new Date().getFullYear(), new Date().getMonth() + monthOffset, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [fact] = useState(() => FACTS[Math.floor(Math.random() * FACTS.length)]);
+
+  const qc = useQueryClient();
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  const [fabOpen, setFabOpen] = useState(false);
+
+  const [budgetEditing, setBudgetEditing] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
+
+  const { data: monthBudgetData } = useQuery({
+    queryKey: ['monthly-budget', currentYear, currentMonth],
+    queryFn: () => getBudgetApi({ year: currentYear, month: currentMonth }).then((r) => r.data),
+  });
+
+  const effectiveBudget = monthBudgetData?.amount || user?.monthlyBudget || 0;
+
+  const saveBudget = useMutation({
+    mutationFn: () => setBudgetApi({ year: currentYear, month: currentMonth, amount: Number(budgetInput) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['monthly-budget'] });
+      toast.success('Бюджет сохранён');
+      setBudgetEditing(false);
+    },
+    onError: () => toast.error('Ошибка сохранения'),
+  });
+
+  const { create } = useTransactions({ page: 1, limit: 1 });
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -150,15 +182,8 @@ export default function DashboardPage() {
     .sort((a, b) => b.total - a.total)
     .slice(0, 6);
 
-  const budgetUsed = user?.monthlyBudget
-    ? Math.min((expense / user.monthlyBudget) * 100, 100)
-    : null;
-
-  const budgetRemaining = 
-  Math.max(
-    (user?.monthlyBudget || 0) - expense,
-    0
-  );
+  const budgetUsed = effectiveBudget ? Math.min((expense / effectiveBudget) * 100, 100) : null;
+  const budgetRemaining = Math.max(effectiveBudget - expense, 0);
 
   const today = new Date();
 
@@ -174,7 +199,7 @@ export default function DashboardPage() {
 
   const forecastExpense = avgPerDay * daysInMonth;
 
-  const forecastPercent = user?.monthlyBudget ? (forecastExpense / user.monthlyBudget) * 100 : 0;
+  const forecastPercent = effectiveBudget ? (forecastExpense / effectiveBudget) * 100 : 0;
 
   const statCards = [
     {
@@ -204,7 +229,7 @@ export default function DashboardPage() {
   ];
 
   return (
-      <motion.div variants={container} initial="hidden" animate="show"
+  <motion.div variants={container} initial="hidden" animate="show"
     style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
     <motion.div variants={FADE}>
@@ -222,9 +247,11 @@ export default function DashboardPage() {
             <Lightbulb size={18} color="#fff" />
           </div>
           <div>
-            <p style={{ fontSize: '0.72rem', color: 'var(--accent-2)', fontWeight: 700,
+            <p style={{
+              fontSize: '0.72rem', color: 'var(--accent-2)', fontWeight: 700,
               textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
-              fontFamily: 'var(--font-display)' }}>
+              fontFamily: 'var(--font-display)',
+            }}>
               Факт дня
             </p>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', lineHeight: 1.6 }}>
@@ -234,382 +261,499 @@ export default function DashboardPage() {
         </div>
       </Card>
     </motion.div>
+
     <motion.div variants={FADE}>
-  <Card style={{ padding: '12px 16px' }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <button onClick={() => { setMonthOffset(o => o - 1); setCustomRange(false); }}
-        style={{
-          width: 32, height: 32, borderRadius: 'var(--radius-s)',
-          background: 'var(--surface-2)', border: 'none', cursor: 'pointer',
-          color: 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-        <ChevronLeft size={16} />
-      </button>
+      <Card style={{ padding: '12px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => { setMonthOffset(o => o - 1); setCustomRange(false); }}
+            style={{
+              width: 32, height: 32, borderRadius: 'var(--radius-s)',
+              background: 'var(--surface-2)', border: 'none', cursor: 'pointer',
+              color: 'var(--text-2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            <ChevronLeft size={16} />
+          </button>
 
-      <span style={{
-        flex: 1, textAlign: 'center', fontFamily: 'var(--font-display)',
-        fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-1)',
-        textTransform: 'capitalize', minWidth: 140,
-      }}>
-        {monthLabel}
-      </span>
+          <span style={{
+            flex: 1, textAlign: 'center', fontFamily: 'var(--font-display)',
+            fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-1)',
+            textTransform: 'capitalize', minWidth: 140,
+          }}>
+            {monthLabel}
+          </span>
 
-      <button onClick={() => { setMonthOffset(o => o + 1); setCustomRange(false); }}
-        disabled={monthOffset >= 0}
-        style={{
-          width: 32, height: 32, borderRadius: 'var(--radius-s)',
-          background: 'var(--surface-2)', border: 'none',
-          cursor: monthOffset >= 0 ? 'not-allowed' : 'pointer',
-          color: monthOffset >= 0 ? 'var(--text-3)' : 'var(--text-2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          opacity: monthOffset >= 0 ? 0.4 : 1,
-        }}>
-        <ChevronRight size={16} />
-      </button>
+          <button
+            onClick={() => { setMonthOffset(o => o + 1); setCustomRange(false); }}
+            disabled={monthOffset >= 0}
+            style={{
+              width: 32, height: 32, borderRadius: 'var(--radius-s)',
+              background: 'var(--surface-2)', border: 'none',
+              cursor: monthOffset >= 0 ? 'not-allowed' : 'pointer',
+              color: monthOffset >= 0 ? 'var(--text-3)' : 'var(--text-2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: monthOffset >= 0 ? 0.4 : 1,
+            }}>
+            <ChevronRight size={16} />
+          </button>
 
-      <button onClick={() => { setMonthOffset(0); setCustomRange(false); }}
+          <button
+            onClick={() => { setMonthOffset(0); setCustomRange(false); }}
+            style={{
+              padding: '5px 12px', borderRadius: 'var(--radius-s)',
+              background: monthOffset === 0 && !customRange ? 'var(--accent)' : 'var(--surface-2)',
+              color: monthOffset === 0 && !customRange ? '#fff' : 'var(--text-2)',
+              border: 'none', cursor: 'pointer', fontSize: '0.78rem',
+              fontFamily: 'var(--font-display)', fontWeight: 600,
+              transition: 'var(--transition)',
+            }}>
+            Сейчас
+          </button>
+
+          <button
+            onClick={() => setCustomRange(v => !v)}
+            style={{
+              padding: '5px 12px', borderRadius: 'var(--radius-s)',
+              background: customRange ? 'var(--accent)' : 'var(--surface-2)',
+              color: customRange ? '#fff' : 'var(--text-2)',
+              border: 'none', cursor: 'pointer', fontSize: '0.78rem',
+              fontFamily: 'var(--font-display)', fontWeight: 600,
+              transition: 'var(--transition)',
+            }}>
+            <Calendar size={13} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+            Период
+          </button>
+        </div>
+
+        {customRange && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+            style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 130 }}>
+              <label style={{ fontSize: '0.72rem', color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>От</label>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                style={{
+                  width: '100%', background: 'var(--surface)',
+                  border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
+                  padding: '8px 10px', color: 'var(--text-1)', fontSize: '0.85rem',
+                }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 130 }}>
+              <label style={{ fontSize: '0.72rem', color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>До</label>
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                style={{
+                  width: '100%', background: 'var(--surface)',
+                  border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
+                  padding: '8px 10px', color: 'var(--text-1)', fontSize: '0.85rem',
+                }} />
+            </div>
+          </motion.div>
+        )}
+      </Card>
+    </motion.div>
+
+    <motion.div variants={FADE}>
+      <button
+        onClick={() => setFabOpen(true)}
         style={{
-          padding: '5px 12px', borderRadius: 'var(--radius-s)',
-          background: monthOffset === 0 && !customRange ? 'var(--accent)' : 'var(--surface-2)',
-          color: monthOffset === 0 && !customRange ? '#fff' : 'var(--text-2)',
-          border: 'none', cursor: 'pointer', fontSize: '0.78rem',
-          fontFamily: 'var(--font-display)', fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '9px 18px', borderRadius: 'var(--radius-m)',
+          background: 'var(--surface)', border: '1px dashed var(--border)',
+          color: 'var(--text-3)', cursor: 'pointer', fontSize: '0.82rem',
+          fontWeight: 500, width: '100%', justifyContent: 'center',
           transition: 'var(--transition)',
-        }}>
-        Сейчас
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = 'var(--accent)';
+          e.currentTarget.style.color = 'var(--accent-2)';
+          e.currentTarget.style.background = 'var(--accent-dim)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = 'var(--border)';
+          e.currentTarget.style.color = 'var(--text-3)';
+          e.currentTarget.style.background = 'var(--surface)';
+        }}
+      >
+        <Plus size={15} />
+        Быстрое добавление транзакции
       </button>
+    </motion.div>
 
-      <button onClick={() => setCustomRange(v => !v)}
-        style={{
-          padding: '5px 12px', borderRadius: 'var(--radius-s)',
-          background: customRange ? 'var(--accent)' : 'var(--surface-2)',
-          color: customRange ? '#fff' : 'var(--text-2)',
-          border: 'none', cursor: 'pointer', fontSize: '0.78rem',
-          fontFamily: 'var(--font-display)', fontWeight: 600,
-          transition: 'var(--transition)',
-        }}>
-        <Calendar size={13} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
-        Период
-      </button>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+      {statCards.map((c, i) => (
+        <motion.div key={i} variants={FADE}>
+          <Card glow={c.glow} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{
+                fontSize: '0.78rem', color: 'var(--text-2)', fontWeight: 600,
+                textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-display)',
+              }}>
+                {c.label}
+              </span>
+              <div style={{
+                width: 36, height: 36, borderRadius: 'var(--radius-s)',
+                background: c.bg, color: c.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {c.icon}
+              </div>
+            </div>
+            <p style={{
+              fontSize: '1.8rem', fontFamily: 'var(--font-display)',
+              fontWeight: 700, letterSpacing: '-0.03em', color: c.color,
+            }}>
+              {c.prefix}{formatCurrency(c.value, user?.currency)}
+            </p>
+          </Card>
+        </motion.div>
+      ))}
     </div>
 
-    {customRange && (
-      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-        style={{ display: 'flex', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 130 }}>
-          <label style={{ fontSize: '0.72rem', color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>От</label>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-            style={{
-              width: '100%', background: 'var(--surface)',
-              border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
-              padding: '8px 10px', color: 'var(--text-1)', fontSize: '0.85rem',
-            }}
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: 130 }}>
-          <label style={{ fontSize: '0.72rem', color: 'var(--text-3)', display: 'block', marginBottom: 4 }}>До</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-            style={{
-              width: '100%', background: 'var(--surface)',
-              border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
-              padding: '8px 10px', color: 'var(--text-1)', fontSize: '0.85rem',
-            }}
-          />
-        </div>
-      </motion.div>
-    )}
-  </Card>
-</motion.div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>    
-        {statCards.map((c, i) => (
-          <motion.div key={i} variants={FADE}>
-            <Card glow={c.glow} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-2)', fontWeight: 600,
-                  textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--font-display)' }}>
-                  {c.label}
-                </span>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 'var(--radius-s)',
-                  background: c.bg, color: c.color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {c.icon}
-                </div>
-              </div>
-              <p style={{ fontSize: '1.8rem', fontFamily: 'var(--font-display)',
-                fontWeight: 700, letterSpacing: '-0.03em', color: c.color }}>
-                {c.prefix}{formatCurrency(c.value, user?.currency)}
-              </p>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+    <motion.div variants={FADE}>
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: effectiveBudget > 0 ? 12 : 0 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>Бюджет месяца</p>
+              {!budgetEditing && (
+                <button
+                  onClick={() => { setBudgetInput(String(effectiveBudget || '')); setBudgetEditing(true); }}
+                  style={{
+                    width: 22, height: 22, borderRadius: 'var(--radius-s)',
+                    background: 'var(--surface-2)', border: 'none',
+                    color: 'var(--text-3)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'var(--transition)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-2)'; e.currentTarget.style.background = 'var(--accent-dim)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.background = 'var(--surface-2)'; }}
+                >
+                  <Pencil size={11} />
+                </button>
+              )}
+            </div>
 
-      {budgetUsed !== null && (
-        <motion.div variants={FADE}>
-          <Card>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>Бюджет месяца</p>
-                <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginTop: 2 }}>
-                  {formatCurrency(expense, user?.currency)} из {formatCurrency(user?.monthlyBudget, user?.currency)}
-                </p>
+            {budgetEditing ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  autoFocus
+                  type="number"
+                  min="0"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveBudget.mutate();
+                    if (e.key === 'Escape') setBudgetEditing(false);
+                  }}
+                  placeholder="Введите сумму"
+                  style={{
+                    background: 'var(--surface-2)',
+                    border: '1px solid var(--accent)',
+                    borderRadius: 'var(--radius-s)',
+                    padding: '6px 10px',
+                    color: 'var(--text-1)',
+                    fontSize: '0.875rem',
+                    width: 150,
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={() => saveBudget.mutate()}
+                  disabled={saveBudget.isPending}
+                  style={{
+                    width: 28, height: 28, borderRadius: 'var(--radius-s)',
+                    background: 'var(--green-dim)', border: 'none',
+                    color: 'var(--green)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  <Check size={13} />
+                </button>
+                <button
+                  onClick={() => setBudgetEditing(false)}
+                  style={{
+                    width: 28, height: 28, borderRadius: 'var(--radius-s)',
+                    background: 'var(--surface-2)', border: 'none',
+                    color: 'var(--text-3)', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                  <XIcon size={13} />
+                </button>
               </div>
+            ) : (
+              <p style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>
+                {effectiveBudget > 0
+                  ? <>
+                      {formatCurrency(expense, user?.currency)} из {formatCurrency(effectiveBudget, user?.currency)}
+                      {monthBudgetData?.isDefault && (
+                        <span style={{ color: 'var(--text-3)', fontSize: '0.72rem' }}> · по умолчанию</span>
+                      )}
+                    </>
+                  : <span style={{ color: 'var(--accent-2)', cursor: 'pointer' }}
+                      onClick={() => { setBudgetInput(''); setBudgetEditing(true); }}>
+                      Задать бюджет на {new Date().toLocaleDateString('ru-RU', { month: 'long' })} →
+                    </span>
+                }
+              </p>
+            )}
+          </div>
+
+          {effectiveBudget > 0 && !budgetEditing && (
+            <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
               <span style={{
-                fontSize: '1.2rem', fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: '1.4rem', fontFamily: 'var(--font-display)', fontWeight: 700,
                 color: budgetUsed > 90 ? 'var(--red)' : budgetUsed > 70 ? 'var(--amber)' : 'var(--green)',
               }}>
                 {budgetUsed.toFixed(0)}%
-                <p style={{
-                  marginTop: 4,
-                  fontSize: '0.78rem',
-                  color: 'var(--text-3)',
-                }}>Осталось{' '}
-                {formatCurrency(
-                  budgetRemaining,
-                  user?.currency
-                )}
-                </p>
               </span>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 2 }}>
+                осталось {formatCurrency(budgetRemaining, user?.currency)}
+              </p>
             </div>
-            <div style={{ height: 8, background: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${budgetUsed}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                style={{
-                  height: '100%', borderRadius: 99,
-                  background: budgetUsed > 90 ? 'var(--red)'
-                    : budgetUsed > 70 ? 'var(--amber)' : 'var(--green)',
-                }}
-              />
-            </div>
-          </Card>
-        </motion.div>
-      )}
+          )}
+        </div>
 
+        {effectiveBudget > 0 && !budgetEditing && (
+          <div style={{ height: 8, background: 'var(--surface-2)', borderRadius: 99, overflow: 'hidden' }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${budgetUsed || 0}%` }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              style={{
+                height: '100%', borderRadius: 99,
+                background: budgetUsed > 90 ? 'var(--red)'
+                  : budgetUsed > 70 ? 'var(--amber)' : 'var(--green)',
+              }}
+            />
+          </div>
+        )}
+      </Card>
+    </motion.div>
+
+    {effectiveBudget > 0 && (
       <motion.div variants={FADE}>
         <Card>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-          }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <p style={{
-                fontWeight: 700,
-                fontSize: '0.9rem',
-              }}>Прогноз месяца</p>
-              <p style={{
-                color: 'var(--text-3)',
-                fontSize: '0.8rem',
-                marginTop: 4,
-              }}>
-                Средний расход:
-                {' '}
-                {formatCurrency(
-                  avgPerDay,
-                  user?.currency
-                )} /день
+              <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>Прогноз месяца</p>
+              <p style={{ color: 'var(--text-3)', fontSize: '0.8rem', marginTop: 4 }}>
+                Средний расход: {formatCurrency(avgPerDay, user?.currency)} /день
               </p>
-          </div>
-          <div style={{
-            textAlign: 'right',
-          }}>
-            <p style={{
-              fontWeight: 700, fontSize: '1.15rem',
-            }}>
-              {formatCurrency(
-                forecastExpense,
-                user?.currency
-              )}
-            </p>
-            <p style={{
-              fontSize: '0.8rem',
-              color: forecastPercent > 100 ? 'var(--red)' : 'var(--green)',
-            }}>
-              {forecastPercent.toFixed(0)}% бюджета
-            </p>
-          </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                {formatCurrency(forecastExpense, user?.currency)}
+              </p>
+              <p style={{
+                fontSize: '0.8rem', marginTop: 2,
+                color: forecastPercent > 100 ? 'var(--red)' : forecastPercent > 80 ? 'var(--amber)' : 'var(--green)',
+              }}>
+                {forecastPercent.toFixed(0)}% бюджета
+                {forecastPercent > 100 && ' · превышение'}
+              </p>
+            </div>
           </div>
         </Card>
       </motion.div>
+    )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 16 }}>
-        <motion.div variants={FADE}>
-          <Card style={{ padding: '24px 20px' }}>
-            <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 20 }}>
-              Динамика за 6 месяцев
-            </p>
-            {chartData.length === 0
-              ? <EmptyState 
-              icon={<BarChart2 size={32} color="var(--text-3)" />}
-              title="Нет данных за период"
-              description="Добавьте транзакции — и здесь появится динамика доходов и расходов по месяцам."
-               />
-              : <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={chartData}>
-                    <defs>
-                      <linearGradient id="income-grad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--green)" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="var(--green)" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="expense-grad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--red)" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="var(--red)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
-                    <XAxis dataKey="name" tick={{ fill: 'var(--text-3)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: 'var(--text-3)', fontSize: 11 }} axisLine={false} tickLine={false}
-                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="income" name="Доходы"
-                      stroke="var(--green)" fill="url(#income-grad)" strokeWidth={2} dot={false} />
-                    <Area type="monotone" dataKey="expense" name="Расходы"
-                      stroke="var(--red)" fill="url(#expense-grad)" strokeWidth={2} dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-            }
-          </Card>
-        </motion.div>
-
-        <motion.div variants={FADE}>
-          <Card style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 16 }}>
-              Расходы по категориям
-            </p>
-            {expenseCats.length === 0
-              ? <EmptyState
-              icon={<PieChartIcon size={32} color="var(--text-3)" />}
-              title="Нет расходов"
-              description="Данные по категориям появятся после первых трат."
-               />
-              : <>
-                  <ResponsiveContainer width="100%" height={160}>
-                    <PieChart>
-                      <Pie data={expenseCats} dataKey="total" nameKey="category"
-                        cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3}>
-                        {expenseCats.map((entry, i) => (
-                          <Cell key={i} fill={entry.color || `hsl(${i * 60}, 70%, 60%)`} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v) => formatCurrency(v)} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                    {expenseCats.map((c, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{
-                          width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                          background: c.color || `hsl(${i * 60}, 70%, 60%)`,
-                        }} />
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-2)', flex: 1,
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {c.icon} {c.category}
-                        </span>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-1)' }}>
-                          {formatCurrency(c.total)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-            }
-          </Card>
-        </motion.div>
-      </div>
-
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 360px', gap: 16 }}>
       <motion.div variants={FADE}>
-        <Card>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>Последние транзакции</p>
-            <Link to="/transactions" style={{ fontSize: '0.8rem', color: 'var(--accent-2)',
-              display: 'flex', alignItems: 'center', gap: 4 }}>
-              Все <ArrowUpRight size={14} />
-            </Link>
-          </div>
-          {txLoading
-            ? <Loader size={24} />
-            : txData?.transactions?.length === 0
-              ? <EmptyState
-              icon={<Receipt size={32} color="var(--text-3)" />}
-              title="Транзакций пока нет"
-              description="Добавьте первый доход или расход — и здесь появится история операций с графиками и аналитикой."
-              action={() => navigate('/transactions')}
-              actionLabel="Добавить транзакцию" />
-              : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  {txData?.transactions?.map((tx) => (
-                    <div key={tx._id} style={{
-                      display: 'flex', alignItems: 'center', gap: 14,
-                      padding: '10px 12px', borderRadius: 'var(--radius-m)',
-                      transition: 'var(--transition)',
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    >
-                      <div style={{
-                        width: 38, height: 38, borderRadius: 'var(--radius-s)',
-                        background: tx.type === 'income' ? 'var(--green-dim)' : 'var(--red-dim)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.1rem', flexShrink: 0,
-                      }}>
-                        {tx.category?.icon || (tx.type === 'income' ? '💰' : '💸')}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontWeight: 500, fontSize: '0.875rem',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {tx.description || tx.category?.name || '—'}
-                        </p>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 2 }}>
-                          {tx.category?.name} · {new Date(tx.date).toLocaleDateString('ru-RU')}
-                        </p>
-                      </div>
-                      <p style={{
-                        fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
-                        color: tx.type === 'income' ? 'var(--green)' : 'var(--red)',
-                        display: 'flex', alignItems: 'center', gap: 3,
-                      }}>
-                        {tx.type === 'income'
-                          ? <ArrowUpRight size={14} />
-                          : <ArrowDownRight size={14} />}
-                        {formatCurrency(tx.amount, user?.currency)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+        <Card style={{ padding: '24px 20px' }}>
+          <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 20 }}>
+            Динамика за 6 месяцев
+          </p>
+          {chartData.length === 0
+            ? <EmptyState
+                icon={<BarChart2 size={32} color="var(--text-3)" />}
+                title="Нет данных за период"
+                description="Добавьте транзакции — и здесь появится динамика доходов и расходов по месяцам."
+              />
+            : <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="income-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--green)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--green)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="expense-grad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--red)" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="var(--red)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="4 4" />
+                  <XAxis dataKey="name" tick={{ fill: 'var(--text-3)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'var(--text-3)', fontSize: 11 }} axisLine={false} tickLine={false}
+                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="income" name="Доходы"
+                    stroke="var(--green)" fill="url(#income-grad)" strokeWidth={2} dot={false} />
+                  <Area type="monotone" dataKey="expense" name="Расходы"
+                    stroke="var(--red)" fill="url(#expense-grad)" strokeWidth={2} dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
           }
         </Card>
       </motion.div>
 
       <motion.div variants={FADE}>
-        <Link to="/ai" style={{ textDecoration: 'none', display: 'block' }}>
-          <Card hover style={{
-            background: 'linear-gradient(135deg, var(--accent-dim), var(--surface))',
-            border: '1px solid rgba(124,106,247,0.25)',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 'var(--radius-m)',
-                background: 'var(--accent)', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'var(--shadow-glow)',
-              }}>
-                <Sparkles size={22} color="#fff" />
-              </div>
-              <div>
-                <p style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>
-                  Спроси ИИ-советника
-                </p>
-                <p style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}>
-                  Анализ расходов, советы по бюджету и автоматическая категоризация
-                </p>
-              </div>
-              <ArrowUpRight size={20} color="var(--accent-2)" style={{ marginLeft: 'auto', flexShrink: 0 }} />
-            </div>
-          </Card>
-        </Link>
+        <Card style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 16 }}>
+            Расходы по категориям
+          </p>
+          {expenseCats.length === 0
+            ? <EmptyState
+                icon={<PieChartIcon size={32} color="var(--text-3)" />}
+                title="Нет расходов"
+                description="Данные по категориям появятся после первых трат."
+              />
+            : <>
+                <ResponsiveContainer width="100%" height={160}>
+                  <PieChart>
+                    <Pie data={expenseCats} dataKey="total" nameKey="category"
+                      cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3}>
+                      {expenseCats.map((entry, i) => (
+                        <Cell key={i} fill={entry.color || `hsl(${i * 60}, 70%, 60%)`} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => formatCurrency(v)} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  {expenseCats.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                        background: c.color || `hsl(${i * 60}, 70%, 60%)`,
+                      }} />
+                      <span style={{
+                        fontSize: '0.78rem', color: 'var(--text-2)', flex: 1,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {c.icon} {c.category}
+                      </span>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-1)' }}>
+                        {formatCurrency(c.total)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+          }
+        </Card>
       </motion.div>
+    </div>
+
+    <motion.div variants={FADE}>
+      <Card>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <p style={{ fontWeight: 700, fontSize: '0.9rem' }}>Последние транзакции</p>
+          <Link to="/transactions" style={{ fontSize: '0.8rem', color: 'var(--accent-2)',
+            display: 'flex', alignItems: 'center', gap: 4 }}>
+            Все <ArrowUpRight size={14} />
+          </Link>
+        </div>
+        {txLoading
+          ? <Loader size={24} />
+          : txData?.transactions?.length === 0
+            ? <EmptyState
+                icon={<Receipt size={32} color="var(--text-3)" />}
+                title="Транзакций пока нет"
+                description="Добавьте первый доход или расход — и здесь появится история операций с графиками и аналитикой."
+                action={() => setFabOpen(true)}
+                actionLabel="Добавить транзакцию"
+              />
+            : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {txData?.transactions?.map((tx) => (
+                  <div key={tx._id} style={{
+                    display: 'flex', alignItems: 'center', gap: 14,
+                    padding: '10px 12px', borderRadius: 'var(--radius-m)',
+                    transition: 'var(--transition)',
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--surface-2)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{
+                      width: 38, height: 38, borderRadius: 'var(--radius-s)',
+                      background: tx.type === 'income' ? 'var(--green-dim)' : 'var(--red-dim)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '1.1rem', flexShrink: 0,
+                    }}>
+                      {tx.category?.icon || (tx.type === 'income' ? '💰' : '💸')}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        fontWeight: 500, fontSize: '0.875rem',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {tx.description || tx.category?.name || '—'}
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 2 }}>
+                        {tx.category?.name} · {new Date(tx.date).toLocaleDateString('ru-RU')}
+                      </p>
+                    </div>
+                    <p style={{
+                      fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
+                      color: tx.type === 'income' ? 'var(--green)' : 'var(--red)',
+                      display: 'flex', alignItems: 'center', gap: 3,
+                    }}>
+                      {tx.type === 'income' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                      {formatCurrency(tx.amount, user?.currency)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+        }
+      </Card>
     </motion.div>
-  );
+
+    <motion.div variants={FADE}>
+      <Link to="/ai" style={{ textDecoration: 'none', display: 'block' }}>
+        <Card hover style={{
+          background: 'linear-gradient(135deg, var(--accent-dim), var(--surface))',
+          border: '1px solid rgba(124,106,247,0.25)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 'var(--radius-m)',
+              background: 'var(--accent)', flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: 'var(--shadow-glow)',
+            }}>
+              <Sparkles size={22} color="#fff" />
+            </div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>
+                Спроси ИИ-советника
+              </p>
+              <p style={{ color: 'var(--text-2)', fontSize: '0.82rem' }}>
+                Анализ расходов, советы по бюджету и автоматическая категоризация
+              </p>
+            </div>
+            <ArrowUpRight size={20} color="var(--accent-2)" style={{ marginLeft: 'auto', flexShrink: 0 }} />
+          </div>
+        </Card>
+      </Link>
+    </motion.div>
+
+    <Modal open={fabOpen} onClose={() => setFabOpen(false)} title="Быстрая транзакция">
+      <TransactionForm
+        onSubmit={(data, meta) => {
+          if (meta?.offline) { setFabOpen(false); return; }
+          create.mutate(
+            { ...data, accountId: activeAccountId || null },
+            {
+              onSuccess: () => {
+                setFabOpen(false);
+                qc.invalidateQueries({ queryKey: ['transactions-recent'] });
+                qc.invalidateQueries({ queryKey: ['stats'] });
+              },
+            }
+          );
+        }}
+        loading={create.isPending}
+      />
+    </Modal>
+
+  </motion.div>
+);
 }
