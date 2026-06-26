@@ -8,7 +8,7 @@ import { getAccountsApi } from '../../api/accounts';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
-import NotificationCenter from './NotificationCenter';
+import NotificationCenter from '../ui/NotificationCenter';
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
