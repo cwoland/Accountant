@@ -18,6 +18,7 @@ import ProfilePage      from './pages/ProfilePage';
 import AiPage           from './pages/AiPage';
 import AppLayout        from './components/layout/AppLayout';
 import NotFoundPage     from './pages/NotFoundPage';
+import Widget           from './pages/Widget';
 
 function SyncManager() {
   useSyncQueue();
@@ -57,8 +58,8 @@ export default function App() {
           <Route path="/profile"      element={<ProfilePage />} />
         </Route>
 
-        <Route path="*" element={<NotFoundPage />} />
         <Route path="/widget" element={<Widget />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
