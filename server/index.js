@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -16,13 +17,36 @@ import userRoutes from './routes/users.js';
 import messageRoutes from './routes/messages.js';
 import goalRoutes from './routes/goals.js';
 import pushRoutes from './routes/push.js';
-
-import jwt from 'jsonwebtoken';
+import budgetRoutes from './routes/budget.js';
 
 dotenv.config();
 connectDB();
 
 const app = express();
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Слишком много попыток входа.' },
+});
+
+const aiLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Вы исчерпали лимит запросов. Попробуйте через час.' },
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: 'Слишком много запросов. Попробуйте позже.' },
+});
 
 app.use(helmet());
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
@@ -30,16 +54,17 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/accounts', accountRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/debts', debtRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/goals', goalRoutes);
-app.use('/api/push', pushRoutes);
+app.use('/api/auth',         authLimiter, authRoutes);
+app.use('/api/ai',           aiLimiter,   aiRoutes);
+app.use('/api/accounts',     apiLimiter,  accountRoutes);
+app.use('/api/transactions', apiLimiter,  transactionRoutes);
+app.use('/api/categories',   apiLimiter,  categoryRoutes);
+app.use('/api/debts',        apiLimiter,  debtRoutes);
+app.use('/api/users',        apiLimiter,  userRoutes);
+app.use('/api/messages',     apiLimiter,  messageRoutes);
+app.use('/api/goals',        apiLimiter,  goalRoutes);
+app.use('/api/push',         apiLimiter,  pushRoutes);
+app.use('/api/budget',       apiLimiter,  budgetRoutes);
 
 
 app.get('/api/health', (req, res) => {
