@@ -7,7 +7,7 @@ import {
     changePassword,
 } from '../controllers/authController.js';
 import protect from '../middleware/auth.js';
-import { searchUsers } from '../controllers/authController.js';
+import { searchUsers, completeOnboarding } from '../controllers/authController.js';
 
 const router = Router();
 
@@ -17,5 +17,6 @@ router.get('/me', protect, getMe);
 router.put('/profile', protect, updateProfile);
 router.put('/password', protect, changePassword);
 router.get('/search', protect, searchUsers);
+router.post('/onboarding-complete', protect, completeOnboarding);
 
 export default router;

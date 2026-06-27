@@ -5,7 +5,7 @@ export const getTransactions = async (req, res, next) => {
     const { type, category, startDate, endDate, page = 1,
       limit = 20, sortBy = 'date', order = 'desc', accountId } = req.query;
 
-    const filter = accountId ? { account: accountId, user: req.user._id } : { user: req.user._id };
+    const filter = accountId ? { account: accountId } : { user: req.user._id, $or: [{ account: null }, { account: { $exists: false } }] };
     if (!accountId) {
       filter.$or = [{ account: null }, { account: { $exists: false } }];
     }
@@ -50,7 +50,7 @@ export const getStats = async (req, res, next) => {
   try {
     const { startDate, endDate, accountId } = req.query;
 
-    const match = accountId ? { account: accountId } : { user: req.user._id };
+    const match = accountId ? { account: new mongoose.Types.ObjectId(accountId) } : { user: req.user._id, $or: [{ account: null }, { aaccount: $exists: false }] };
     if (startDate || endDate) {
       match.date = {};
       if (startDate) match.date.$gte = new Date(startDate);

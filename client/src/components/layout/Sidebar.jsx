@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, ArrowLeftRight, AlertCircle,
+  Bell, LayoutDashboard, ArrowLeftRight, AlertCircle,
   ShoppingCart, Sparkles, User, Users, LogOut, Wallet, Menu, X, Landmark, Target
 } from 'lucide-react';
 import useStore from '../../store/useStore';
 import toast from 'react-hot-toast';
 import { avatarIcons } from '../../utils/avatarIcons';
+import NotificationCenter from '../ui/NotificationCenter';
+import useNotificationStore from '../../store/useNotificationStore';
 
 const links = [
     { to: '/',             icon: <LayoutDashboard size={18} />, label: 'Обзор' },
@@ -217,16 +219,23 @@ function MobileDrawer({ open, onClose }) {
   );
 }
 
-export function MobileTopBar({ onOpen }) {
+export function MobileTopBar({ onOpen, onBellClick }) {
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
+
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 16px', 
+      display: 'flex',
+      alignItems: 'flex-end', 
+      justifyContent: 'space-between',
+      padding: '0 16px 12px', 
       paddingTop: 'env(safe-area-inset-top)',
-      height: 'calc(var(--header-h) + env(safe-area-inset-top))',
-      background: 'var(--bg)', borderBottom: '1px solid var(--border)',
-      position: 'sticky', top: 0, zIndex: 200,
-      width: '100%', overflow: 'hidden',
+      background: 'var(--bg)', 
+      borderBottom: '1px solid var(--border)',
+      position: 'sticky', 
+      top: 0, 
+      zIndex: 200,
+      width: '100%', 
+      overflow: 'hidden',
       boxSizing: 'border-box',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -243,6 +252,50 @@ export function MobileTopBar({ onOpen }) {
         </span>
         </Link>
       </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ position: 'relative' }}>
+          <button
+          onClick={onBellClick}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 'var(--radius-m)',
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+          }}>
+            <Bell size={17} />
+          </button>
+          {unreadCount > 0 && (
+            <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            style={{
+              position: 'absolute',
+              top: -3,
+              right: -3,
+              width: 16,
+              height: 16,
+              borderRadius: '50%',
+              background: 'var(--accent)',
+              color: '#fff',
+              fontSize: '0.6rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid var(--bg)',
+            }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </motion.span>
+          )}
+        </div>
+      </div>
+
       <button onClick={onOpen} style={{
         width: 36, height: 36, borderRadius: 'var(--radius-m)',
         background: 'var(--surface)', border: '1px solid var(--border)',
@@ -258,6 +311,8 @@ export function MobileTopBar({ onOpen }) {
 export default function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -266,11 +321,21 @@ export default function Sidebar() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const handleBellClick = () => {
+    setNotifOpen(true);
+    markAllRead();
+  };
+
   if (isMobile) {
     return (
       <>
-        <MobileTopBar onOpen={() => setDrawerOpen(true)} />
+        <MobileTopBar onOpen={() => setDrawerOpen(true)} onBellClick={handleBellClick} />
         <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        <NotificationCenter 
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        isMobile={true}
+        />
       </>
     );
   }

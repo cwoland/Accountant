@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import useSyncQueue    from './hooks/useSyncQueue';
-import useStore        from './store/useStore';
-import WakeUpBanner    from './components/ui/WakeUpBanner';
-import InstallBanner   from './components/ui/InstallBanner';
-import usePushListener from './hooks/usePushListener';
+import useSyncQueue     from './hooks/useSyncQueue';
+import useStore         from './store/useStore';
+import WakeUpBanner     from './components/ui/WakeUpBanner';
+import InstallBanner    from './components/ui/InstallBanner';
+import usePushListener  from './hooks/usePushListener';
+import OnboardingWizard from './components/OnboardingWizard'; // ← новый
 
 import LoginPage        from './pages/auth/LoginPage';
 import RegisterPage     from './pages/auth/RegisterPage';
@@ -27,7 +28,16 @@ function SyncManager() {
 
 function PrivateRoute({ children }) {
   const token = useStore((s) => s.token);
-  return token ? children : <Navigate to="/login" replace />;
+  const user  = useStore((s) => s.user);
+
+  if (!token) return <Navigate to="/login" replace />;
+
+  return (
+    <>
+      {children}
+      {user && user.onboardingCompleted === false && <OnboardingWizard />}
+    </>
+  );
 }
 
 function GuestRoute({ children }) {
@@ -39,7 +49,7 @@ export default function App() {
   usePushListener();
   return (
     <BrowserRouter>
-     <SyncManager />
+      <SyncManager />
       <WakeUpBanner />
       <InstallBanner />
       <Routes>
@@ -59,7 +69,7 @@ export default function App() {
         </Route>
 
         <Route path="/widget" element={<Widget />} />
-        <Route path="*" element={<NotFoundPage />} />
+        <Route path="*"       element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -145,7 +145,11 @@ export default function DashboardPage() {
     onError: () => toast.error('Ошибка сохранения'),
   });
 
-  const { create } = useTransactions({ page: 1, limit: 1 });
+  const { create } = useTransactions({
+    page: 1,
+    limit: 1,
+    ...(activeAccountId && { accountId: activeAccountId }),
+  });
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768);
@@ -742,10 +746,12 @@ export default function DashboardPage() {
           create.mutate(
             { ...data, accountId: activeAccountId || null },
             {
-              onSuccess: () => {
+              onSuccess: () => setFabOpen(false),
+              onSettled: () => {
                 setFabOpen(false);
                 qc.invalidateQueries({ queryKey: ['transactions-recent'] });
                 qc.invalidateQueries({ queryKey: ['stats'] });
+                qc.invalidateQueries({ queryKey: ['monthly-budget'] });
               },
             }
           );

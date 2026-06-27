@@ -80,17 +80,18 @@ export default function Header() {
         style={{
             gridColumn: 2,
             gridRow: 1,
-            height: 'var(--header-h)',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-end',
             justifyContent: 'space-between',
-            padding: '0 32px',
+            padding: '0 16px 12px',
             paddingTop: 'env(safe-area-inset-top)',
             borderBottom: '1px solid var(--border)',
             background: 'var(--bg)',
             position: 'sticky',
             top: 0,
-            zIndex: 50,
+            zIndex: 200,
+            width: '100%',
+            boxSizing: 'border-box',
         }}>
             <div>
                 <h1 style={{ fontSize: '1.15rem', fontWeight: 700, letterSpacing: '-0.02em' }}>

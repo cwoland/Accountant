@@ -27,6 +27,7 @@ export const register = async (req, res, next) => {
       monthlyBudget: user.monthlyBudget,
       avatar: user.avatar,
       token: generateToken(user._id),
+      onboardingCompleted: user.onboardingCompleted,
     });
   } catch (err) {
     next(err);
@@ -54,6 +55,7 @@ export const login = async (req, res, next) => {
       monthlyBudget: user.monthlyBudget,
       avatar: user.avatar,
       token: generateToken(user._id),
+      onboardingCompleted: user.onboardingCompleted,
     });
   } catch (err) {
     next(err);
@@ -85,6 +87,7 @@ export const updateProfile = async (req, res, next) => {
             currency: user.currency,
             monthlyBudget: user.monthlyBudget,
             avatar: user.avatar,
+            onboardingCompleted: user.onboardingCompleted,
         });
     } catch (err) {
         next(err);
@@ -128,6 +131,27 @@ export const searchUsers = async (req, res, next) => {
       .limit(10);
 
       res.json(users);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const completeOnboarding = async (req, res, next) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { onboardingCompleted: true },
+      { new: true }
+    );
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      currency: user.currency,
+      monthlyBudget: user.monthlyBudget,
+      avatar: user.avatar,
+      onboardingCompleted: user.onboardingCompleted,
+    });
   } catch (err) {
     next(err);
   }
