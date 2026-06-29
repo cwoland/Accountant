@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Transaction from '../models/Transaction.js';
 
 export const getTransactions = async (req, res, next) => {
@@ -5,19 +6,16 @@ export const getTransactions = async (req, res, next) => {
     const { type, category, startDate, endDate, page = 1,
       limit = 20, sortBy = 'date', order = 'desc', accountId } = req.query;
 
-    const filter = accountId ? { account: accountId } : { user: req.user._id, $or: [{ account: null }, { account: { $exists: false } }] };
-    if (!accountId) {
-      filter.$or = [{ account: null }, { account: { $exists: false } }];
-    }
-
-    const debugAll = await Transaction.find({ user: req.user._id }).select('account user').lean();
+    const filter = accountId
+      ? { account: accountId }
+      : { user: req.user._id, $or: [{ account: null }, { account: { $exists: false } }] };
 
     if (type) filter.type = type;
     if (category) filter.category = category;
     if (startDate || endDate) {
       filter.date = {};
       if (startDate) filter.date.$gte = new Date(startDate);
-      if (endDate) filter.date.$lte = new Date(endDate);
+      if (endDate)   filter.date.$lte = new Date(endDate);
     }
 
     const total = await Transaction.countDocuments(filter);
@@ -36,11 +34,6 @@ export const getTransactions = async (req, res, next) => {
         limit: Number(limit),
       },
     });
-
-    if (total === 0 && !accountId) {
-      const debugAll = await Transaction.find({ user: req.user._id }).limit(5);
-      console.log('[DEBUG] Transactions by user (no account filter):', debugAll.length, debugAll.map(t => ({ id: t._id, account: t.account })));
-    }
   } catch (err) {
     next(err);
   }
@@ -50,70 +43,36 @@ export const getStats = async (req, res, next) => {
   try {
     const { startDate, endDate, accountId } = req.query;
 
-    const match = accountId ? { account: new mongoose.Types.ObjectId(accountId) } : { user: req.user._id, $or: [{ account: null }, { aaccount: $exists: false }] };
+    const match = accountId
+      ? { account: new mongoose.Types.ObjectId(accountId) }
+      : { user: req.user._id, $or: [{ account: null }, { account: { $exists: false } }] };
+
     if (startDate || endDate) {
       match.date = {};
       if (startDate) match.date.$gte = new Date(startDate);
-      if (endDate) match.date.$lte = new Date(endDate);
+      if (endDate)   match.date.$lte = new Date(endDate);
     }
 
     const stats = await Transaction.aggregate([
       { $match: match },
-      {
-        $group: {
-          _id: '$type',
-          total: { $sum: '$amount' },
-          count: { $sum: 1 },
-        },
-      },
+      { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } },
     ]);
 
     const byCategory = await Transaction.aggregate([
       { $match: match },
-      {
-        $group: {
-          _id: { category: '$category', type: '$type' },
-          total: { $sum: '$amount' },
-          count: { $sum: 1 },
-        },
-      },
-      {
-        $lookup: {
-          from: 'categories',
-          localField: '_id.category',
-          foreignField: '_id',
-          as: 'categoryInfo',
-        },
-      },
+      { $group: { _id: { category: '$category', type: '$type' }, total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $lookup: { from: 'categories', localField: '_id.category', foreignField: '_id', as: 'categoryInfo' } },
       { $unwind: '$categoryInfo' },
-      {
-        $project: {
-          type: '$_id.type',
-          category: '$categoryInfo.name',
-          icon: '$categoryInfo.icon',
-          color: '$categoryInfo.color',
-          total: 1,
-          count: 1,
-        },
-      },
+      { $project: { type: '$_id.type', category: '$categoryInfo.name', icon: '$categoryInfo.icon', color: '$categoryInfo.color', total: 1, count: 1 } },
     ]);
 
     const monthly = await Transaction.aggregate([
       { $match: match },
-      {
-        $group: {
-          _id: {
-            year: { $year: '$date' },
-            month: { $month: '$date' },
-            type: '$type',
-          },
-          total: { $sum: '$amount' },
-        },
-      },
+      { $group: { _id: { year: { $year: '$date' }, month: { $month: '$date' }, type: '$type' }, total: { $sum: '$amount' } } },
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
 
-    const income = stats.find((s) => s._id === 'income')?.total || 0;
+    const income  = stats.find((s) => s._id === 'income')?.total  || 0;
     const expense = stats.find((s) => s._id === 'expense')?.total || 0;
 
     res.json({
@@ -128,15 +87,14 @@ export const getStats = async (req, res, next) => {
 
 export const createTransaction = async (req, res, next) => {
   try {
-    const { type, amount, category, description, date, isRecurring, recurringPeriod, tags, accountId } =
-      req.body;
+    const { type, amount, category, description, date, isRecurring, recurringPeriod, tags, accountId } = req.body;
 
     if (accountId) {
       const Account = (await import('../models/Account.js')).default;
       const account = await Account.findById(accountId);
       if (!account) return res.status(404).json({ message: 'Счёт не найден.' });
-      const hasAccess = account.owner.toString() === req.user._id.toString() || 
-      account.members.some(m => m.user.toString() === req.user._id.toString() && m.status === 'active');
+      const hasAccess = account.owner.toString() === req.user._id.toString() ||
+        account.members.some(m => m.user.toString() === req.user._id.toString() && m.status === 'active');
       if (!hasAccess) return res.status(403).json({ message: 'Нет доступа к счёту.' });
     }
 
@@ -146,10 +104,7 @@ export const createTransaction = async (req, res, next) => {
     const transaction = await Transaction.create({
       user: req.user._id,
       account: accountId || null,
-      type,
-      amount,
-      category,
-      description,
+      type, amount, category, description,
       date: date || Date.now(),
       isRecurring: isRecurring || false,
       recurringPeriod: recurringPeriod || null,
@@ -166,10 +121,7 @@ export const createTransaction = async (req, res, next) => {
 export const updateTransaction = async (req, res, next) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
-
-    if (!transaction)
-      return res.status(404).json({ message: 'Транзакция не найдена.' });
-
+    if (!transaction) return res.status(404).json({ message: 'Транзакция не найдена.' });
     if (transaction.user.toString() !== req.user._id.toString())
       return res.status(403).json({ message: 'Нет доступа.' });
 
@@ -187,10 +139,7 @@ export const updateTransaction = async (req, res, next) => {
 export const deleteTransaction = async (req, res, next) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
-
-    if (!transaction)
-      return res.status(404).json({ message: 'Транзакция не найдена.' });
-
+    if (!transaction) return res.status(404).json({ message: 'Транзакция не найдена.' });
     if (transaction.user.toString() !== req.user._id.toString())
       return res.status(403).json({ message: 'Нет доступа.' });
 
