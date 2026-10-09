@@ -1,0 +1,21 @@
+{
+  "extends": "../shared/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "rootDir": "src",
+    "outDir": "dist",
+    "declaration": false,
+    "declarationMap": false,
+
+    // Отключено намеренно: типы запросов Mongoose (StrictCondition,
+    // _QueryFilter) написаны без учёта этого флага и отвергают любой
+    // фильтр, где поле может быть undefined. Цена — 65 ложных ошибок
+    // на каждом findOne/updateOne. Валидацию входа держит zod, а
+    // { amount: undefined } из находки #10 ловится тем, что findOne
+    // возвращает T | null. В shared и client флаг остаётся включённым,
+    // там он защищает DTO и пропсы.
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,27 @@
+.wrap { padding-top: 4px; }
+
+.rail { display: flex; gap: var(--rail-gap); padding: 4px var(--pad) 22px; overflow: hidden; }
+.hero { padding: 6px var(--pad) 24px; }
+
+.spine, .tile, .line {
+  background: linear-gradient(90deg, var(--wall) 25%, var(--wall-2) 50%, var(--wall) 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s var(--ease) infinite;
+  border-radius: var(--r-tile);
+  flex: 0 0 auto;
+}
+.spine { width: 146px; height: 66px; }
+.tile  { width: 138px; aspect-ratio: 3 / 4; }
+.line  { border-radius: var(--r-chip); }
+
+@keyframes shimmer { to { background-position: -400% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .spine, .tile, .line { animation: none; background: var(--wall); }
+}
+
+@media (min-width: 860px) {
+  .rail, .hero { padding-left: 0; padding-right: 0; }
+  .spine { width: 184px; height: 72px; }
+  .tile  { width: 168px; }
+}

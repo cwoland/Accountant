@@ -1,0 +1,30 @@
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-capture);
+  display: flex; gap: 9px; align-items: center;
+  max-width: 1240px; margin: 0 auto;
+  padding: 10px var(--pad) calc(10px + var(--safe-b));
+  background: linear-gradient(transparent, var(--ground) 36%);
+}
+.primary, .quiet {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; border-radius: var(--r-tile);
+  font-weight: 800; font-size: 14.5px; letter-spacing: -0.01em;
+  transition: transform var(--dur) var(--ease);
+}
+.primary:active, .quiet:active { transform: scale(0.985); }
+
+.primary { background: var(--bone); color: var(--on-bone); flex: 1; padding: 0 20px; }
+.quiet {
+  background: var(--wall-2); color: var(--bone-2);
+  border: 1px solid var(--hairline-2); width: 48px;
+}
+
+@media (min-width: 860px) {
+  .bar {
+    position: static; grid-column: 1; grid-row: 2;
+    background: none; max-width: none; margin: 0;
+    padding: 2px 14px 16px var(--pad);
+  }
+  .quiet { display: none; }          /* съёмка чека живёт внутри листа записи */
+  .primary { white-space: nowrap; height: 44px; padding: 0 14px; gap: 7px; font-size: 14px; }
+}

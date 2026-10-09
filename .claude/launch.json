@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "design-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "/private/tmp/claude-501/-Users-anton-dev-personal-Accountant/df5b882b-311c-49b8-8703-9b620ab55ba5/scratchpad/preview", "-p", "4321", "-c-1", "--silent"],
+      "port": 4321
+    }
+  ]
+}

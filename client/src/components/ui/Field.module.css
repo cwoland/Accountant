@@ -1,0 +1,45 @@
+.wrap { display: flex; flex-direction: column; gap: 6px; }
+
+.label {
+  font-size: var(--t-label); font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--bone-3);
+}
+
+.box {
+  display: flex; align-items: center;
+  background: var(--wall-2);
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--r-tile);
+  transition: border-color var(--dur) var(--ease);
+}
+.box:focus-within { border-color: var(--bone); }
+.box[data-invalid='true'] { border-color: var(--over); }
+
+.input {
+  flex: 1; min-width: 0;
+  height: 46px; padding: 0 14px;
+  background: none; border: none; outline: none;
+  color: var(--bone); font-size: var(--t-lead);
+}
+.input::placeholder { color: var(--bone-4); }
+/* Числа везде табличные — суммы должны выравниваться по разряду. */
+.input[type='number'], .input[inputmode='decimal'] {
+  font-family: var(--font-num); font-variant-numeric: tabular-nums;
+}
+.input[type='number']::-webkit-outer-spin-button,
+.input[type='number']::-webkit-inner-spin-button { appearance: none; margin: 0; }
+
+.select {
+  appearance: none; cursor: pointer; padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238B8172' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.select option { background: var(--wall-2); color: var(--bone); }
+
+.suffix {
+  padding: 0 14px 0 4px;
+  font-family: var(--font-num); font-size: var(--t-lead); color: var(--bone-3);
+}
+
+.err  { font-size: var(--t-meta); color: var(--over); }
+.hint { font-size: var(--t-meta); color: var(--bone-4); }

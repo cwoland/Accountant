@@ -1,0 +1,25 @@
+.row { margin-bottom: 26px; }
+.head {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 0 var(--pad); margin-bottom: 10px;
+}
+.title {
+  font-size: var(--t-label); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3);
+}
+.count {
+  font-family: var(--font-num); font-size: 10px;
+  color: var(--bone-4); letter-spacing: 0.04em;
+}
+.all {
+  margin-left: auto;
+  font-size: var(--t-label); font-weight: 700; color: var(--bone-2);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 5px;
+  transition: color var(--dur) var(--ease);
+}
+.all:hover { color: var(--bone); }
+
+@media (min-width: 860px) {
+  .head { padding-left: 0; padding-right: 0; margin-bottom: 14px; }
+}

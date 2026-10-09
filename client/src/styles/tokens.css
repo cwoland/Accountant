@@ -1,0 +1,68 @@
+:root {
+    --ground:     #16130F;
+    --wall:       #1E1A15;
+    --wall-2:     #272118;
+    --wall-3:     #332B20;
+    --hairline:   rgba(240, 234, 224, 0.10);
+    --hairline-2: rgba(240, 234, 224, 0.18);
+
+    --bone:       #F2EDE3;
+    --bone-2:     #C4BBAA;
+    --bone-3:     #8B8172;
+    --bone-4:     #5D5547;
+    --on-bone:    #16130F;
+
+    --ink-0:      #E8482D;
+    --ink-1:      #D99A1F;
+    --ink-2:      #1F6F4A;
+    --ink-3:      #13746F;
+    --ink-4:      #2B5CC4;
+    --ink-5:      #3B3B8F;
+    --ink-6:      #6E2E63;
+    --ink-7:      #B52A6B;
+    --ink-8:      #A2452A;
+    --ink-9:      #5F6B23;
+    --ink-10:     #44525E;
+    --ink-11:     #7A1F2B;
+
+    --over:       #E8482D;
+    --ok:         #2E9E6B;
+    --warn:       #D99A1F;
+
+    --font-word:  'Golos Text', system-ui, -apple-system, sans-serif;
+    --font-big:   'Unbounded', 'Golos Text', system-ui, sans-serif;
+    --font-num:   'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+    --t-micro: 9.5px;
+    --t-label: 11px;
+    --t-meta:  12px;
+    --t-body:  13.5px;
+    --t-lead:  15px;
+    --t-title: 20px;
+
+    --r-tile:  4px;
+    --r-chip:  2px;
+    --r-sheet: 18px;
+
+    --pad: 16px;
+    --rail-gap: 10px;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --dur: 0.22s;
+    --dur-slow: 0.5s;
+
+    --z-rail: 1;
+    --z-bar: 40;
+    --z-capture: 50;
+    --z-sheet: 200;
+}
+
+@media (min-width: 860px) {
+    :root {
+        --pad: 28px;
+        --rail-gap: 14px;
+        --t-label: 12px;
+    }
+}

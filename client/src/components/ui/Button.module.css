@@ -1,0 +1,32 @@
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: var(--r-tile);
+  font-weight: 800; letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease),
+              background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.btn:active:not(:disabled) { transform: scale(0.985); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn[data-full] { width: 100%; }
+
+.btn[data-size='sm'] { height: 34px; padding: 0 12px; font-size: 12.5px; }
+.btn[data-size='md'] { height: 42px; padding: 0 18px; font-size: 14px; }
+.btn[data-size='lg'] { height: 48px; padding: 0 22px; font-size: 14.5px; }
+
+/* Весь хроматический вес отдан постерам, поэтому первичное действие —
+   самый светлый объект на экране, а не самый цветной. */
+.btn[data-variant='bone']  { background: var(--bone); color: var(--on-bone); }
+.btn[data-variant='quiet'] { background: var(--wall-2); color: var(--bone-2); border: 1px solid var(--hairline-2); }
+.btn[data-variant='quiet']:hover:not(:disabled) { color: var(--bone); border-color: var(--bone-4); }
+.btn[data-variant='ghost'] { background: transparent; color: var(--bone-3); }
+.btn[data-variant='ghost']:hover:not(:disabled) { color: var(--bone); background: var(--wall); }
+.btn[data-variant='danger'] { background: transparent; color: var(--over); border: 1px solid color-mix(in srgb, var(--over) 40%, transparent); }
+.btn[data-variant='danger']:hover:not(:disabled) { background: color-mix(in srgb, var(--over) 14%, transparent); }
+
+.spinner {
+  width: 14px; height: 14px; flex: 0 0 auto;
+  border: 2px solid currentColor; border-top-color: transparent;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

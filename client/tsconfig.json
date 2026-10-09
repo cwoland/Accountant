@@ -1,0 +1,26 @@
+{
+  "extends": "../shared/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    // Выключено по той же причине, что и на сервере: идиома React —
+    // передавать undefined для «проп не задан» (icon={maybe}), а этот флаг
+    // такое запрещает. В shared он остаётся включённым и защищает DTO.
+    "exactOptionalPropertyTypes": false,
+    // Без этого наследуется rootDir из shared/tsconfig.json, и он
+    // резолвится относительно shared/ — каждый файл клиента оказывается
+    // «вне rootDir». Сборкой занимается Vite, tsc здесь только проверяет.
+    "rootDir": ".",
+    "outDir": "./.tsbuild",
+    "allowImportingTsExtensions": true,
+    "types": ["vite/client", "vite-plugin-pwa/client"],
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["src", "vite.config.ts"]
+}

@@ -1,14 +1,21 @@
 {
   "name": "accountant",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
+  "type": "module",
+  "workspaces": ["shared", "server", "client"],
+  "engines": { "node": ">=20.11" },
   "scripts": {
-    "dev:client": "cd client && npm run dev",
-    "dev:server": "cd server && npm run dev",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "cd client && npm run build"
+    "build:shared": "npm run build -w @accountant/shared",
+    "dev": "npm run build:shared && concurrently -n srv,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build:shared && npm run build -w server && npm run build -w client",
+    "typecheck": "npm run typecheck -w @accountant/shared && npm run typecheck -w server && npm run typecheck -w client",
+    "lint": "eslint .",
+    "seed": "npm run seed -w server",
+    "migrate": "npm run migrate -w server"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^9.1.0",
+    "typescript": "^5.7.2"
   }
 }

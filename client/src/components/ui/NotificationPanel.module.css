@@ -1,0 +1,58 @@
+.panel {
+  position: absolute; top: calc(100% + 8px); right: var(--pad);
+  width: min(340px, calc(100vw - 2 * var(--pad)));
+  z-index: var(--z-sheet);
+  background: var(--wall);
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--r-tile);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.head {
+  display: flex; align-items: center; gap: 6px;
+  padding: 12px 10px 12px 14px;
+  border-bottom: 1px solid var(--hairline);
+}
+.title {
+  flex: 1; font-size: var(--t-label); font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--bone-3);
+}
+.act {
+  width: 26px; height: 26px; flex: 0 0 auto;
+  border-radius: var(--r-chip); color: var(--bone-4);
+  display: grid; place-items: center;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.act:hover { color: var(--bone); background: var(--wall-2); }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 34px 20px; color: var(--bone-4); font-size: var(--t-meta);
+}
+
+.list { list-style: none; max-height: 56dvh; overflow-y: auto; }
+.item {
+  display: flex; align-items: flex-start; gap: 4px;
+  padding-right: 8px;
+  border-bottom: 1px solid var(--hairline);
+}
+.item:last-child { border-bottom: none; }
+/* Непрочитанное помечено полосой слева, а не только фоном. */
+.item[data-unread] { box-shadow: inset 2px 0 0 var(--bone); }
+
+.hit {
+  flex: 1; min-width: 0; display: flex; gap: 11px;
+  padding: 11px 4px 11px 12px; text-align: left;
+}
+.mark {
+  width: 28px; height: 28px; flex: 0 0 auto;
+  border-radius: var(--r-chip); background: var(--wall-2);
+  color: var(--bone-2); display: grid; place-items: center;
+}
+.text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.name { font-size: var(--t-meta); font-weight: 700; }
+.body { font-size: var(--t-meta); color: var(--bone-3); }
+.ago  { font-family: var(--font-num); font-size: 10px; color: var(--bone-4); margin-top: 2px; }
+
+@media (min-width: 860px) { .panel { right: 0; } }

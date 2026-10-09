@@ -1,0 +1,12 @@
+.app { max-width: 1240px; margin: 0 auto; padding-bottom: calc(84px + var(--safe-b)); }
+.main { min-width: 0; }
+
+@media (min-width: 860px) {
+  .app {
+    display: grid;
+    grid-template-columns: 212px 1fr;
+    grid-template-rows: auto auto 1fr;
+    padding-bottom: 40px;
+  }
+  .main { grid-column: 2; grid-row: 2 / span 2; padding-right: var(--pad); }
+}
