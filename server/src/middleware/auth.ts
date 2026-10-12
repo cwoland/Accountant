@@ -3,7 +3,7 @@ import jwt, { type JwtPayload } from 'jsonwebtoken';
 import type { HydratedDocument } from 'mongoose';
 import { env } from '../config/env.js';
 import { User, type IUser } from '../models/User.js';
-import { forbidden, unauthorized } from '../lib/HttpError.js';
+import { forbidden, sessionExpired, unauthorized } from '../lib/HttpError.js';
 
 interface TokenPayload extends JwtPayload {
   id: string;
@@ -26,15 +26,15 @@ export const protect: RequestHandler = async (req, _res, next) => {
     try {
       payload = jwt.verify(token, env.JWT_SECRET) as TokenPayload;
     } catch {
-      throw unauthorized('Сессия истекла. Войдите снова.');
+      throw sessionExpired();
     }
 
     const user: HydratedDocument<IUser> | null = await User.findById(payload.id);
-    if (!user) throw unauthorized('Сессия истекла. Войдите снова.');
+    if (!user) throw sessionExpired();
 
     const changedAt = Math.floor(user.passwordChangedAt.getTime() / 1000);
     if (typeof payload.pwd !== 'number' || payload.pwd < changedAt) {
-      throw unauthorized('Пароль был изменён. Войдите снова.');
+      throw sessionExpired('Пароль был изменён. Войдите снова.');
     }
 
     req.user = user;

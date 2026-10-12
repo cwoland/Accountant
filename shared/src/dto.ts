@@ -102,7 +102,9 @@ export interface AccountDto {
 }
 
 export interface ApiError {
+  code: string;
   message: string;
+  params?: Record<string, string | number>;
   fields?: Record<string, string>;
   ref?: string;
 }

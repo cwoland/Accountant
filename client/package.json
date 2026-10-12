@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predev": "tsc -p ../shared/tsconfig.json",
     "build": "vite build",
+    "prebuild": "tsc -p ../shared/tsconfig.json",
     "lint": "eslint .",
     "preview": "vite preview"
   },

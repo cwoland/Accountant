@@ -1,6 +1,6 @@
 import { Types, type HydratedDocument } from 'mongoose';
 import { Account, type IAccount } from '../models/Account.js';
-import { notFound } from './HttpError.js';
+import { accountNotFound } from './HttpError.js';
 
 export type AccountRole = 'owner' | 'member';
 
@@ -21,7 +21,7 @@ export async function requireAccountAccess(
     ],
   });
 
-  if (!account) throw notFound('Счёт не найден.');
+  if (!account) throw accountNotFound();
 
   return {
     account,
@@ -34,7 +34,7 @@ export async function requireAccountOwner(
   userId: Types.ObjectId,
 ): Promise<HydratedDocument<IAccount>> {
   const account = await Account.findOne({ _id: accountId, owner: userId });
-  if (!account) throw notFound('Счёт не найден.');
+  if (!account) throw accountNotFound();
   return account;
 }
 

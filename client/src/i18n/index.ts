@@ -13,7 +13,7 @@ void i18n
     .init({
         resources: { ru: { translation: ru }, en: { translation: en } },
         fallbackLng: 'ru',
-        supportedLangs: LANGS,
+        supportedLngs: [...LANGS],
         load: 'languageOnly',
         detection: {
             order: ['localStorage', 'navigator'],
@@ -23,9 +23,19 @@ void i18n
         interpolation: {
             escapeValue: false,
         },
-        returnNull: false,
     });
 
 export const currentLocale = (): string => (i18n.language === 'en' ? 'en-US' : 'ru-RU');
 
 export default i18n;
+type LooseTranslate = (key: string, params?: Record<string, unknown>) => string;
+
+export function translateCode(
+  code: string,
+  params?: Record<string, string | number>,
+  fallback?: string,
+): string {
+  if (!i18n.exists(code)) return fallback ?? code;
+  const translate = i18n.t.bind(i18n) as unknown as LooseTranslate;
+  return translate(code, params ?? {});
+}

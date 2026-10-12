@@ -14,7 +14,7 @@ import { env } from '../config/env.js';
 import { User, type IUser } from '../models/User.js';
 import { currentUser } from '../middleware/auth.js';
 import { valid } from '../middleware/validate.js';
-import { conflict, unauthorized } from '../lib/HttpError.js';
+import { badCredentials, emailTaken, unauthorized } from '../lib/HttpError.js';
 import { prefixSearch } from '../lib/escapeRegex.js';
 import { toUserDto } from '../lib/serializers.js';
 
@@ -36,7 +36,7 @@ export const register: RequestHandler = async (req, res, next) => {
     const { name, email, password } = valid<typeof registerBody>(req, 'body');
 
     if (await User.exists({ email })) {
-      throw conflict('Email уже зарегистрирован.');
+      throw emailTaken();
     }
 
     const user = await User.create({ name, email, password });
@@ -52,7 +52,7 @@ export const login: RequestHandler = async (req, res, next) => {
 
     const user = await User.findOne({ email }).select('+password');
     if (!user || !(await user.matchPassword(password))) {
-      throw unauthorized('Неверный email или пароль.');
+      throw badCredentials();
     }
 
     res.json(authPayload(user));

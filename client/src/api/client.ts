@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios';
 import type { ApiError } from '@accountant/shared';
 import { useAuthStore } from '../store/authStore';
+import { translateCode } from '../i18n';
 
 export const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -34,13 +35,15 @@ api.interceptors.response.use(
   },
 );
 
-export function errorMessage(err: unknown, fallback = 'Что-то пошло не так'): string {
+export function errorMessage(err: unknown, fallback?: string): string {
   if (axios.isAxiosError<ApiError>(err)) {
-    if (err.code === 'ECONNABORTED') return 'Сервер не ответил. Попробуйте ещё раз.';
-    if (!err.response) return 'Нет связи с сервером.';
-    return err.response.data?.message ?? fallback;
+    if (err.code === 'ECONNABORTED') return translateCode('error.timeout', {}, fallback);
+    if (!err.response) return translateCode('error.serverDown', {}, fallback);
+    const data = err.response.data;
+    if (data?.code) return translateCode(data.code, data.params, data.message ?? fallback);
+    return data?.message ?? translateCode('error.unknown', {}, fallback);
   }
-  return err instanceof Error ? err.message : fallback;
+  return translateCode('error.unknown', {}, fallback);
 }
 
 export function errorFields(err: unknown): Record<string, string> {
