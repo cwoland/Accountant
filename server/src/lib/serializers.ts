@@ -35,6 +35,7 @@ export function toCategoryDto(c: ICategory): CategoryDto {
     ink: c.ink,
     isMandatory: c.isMandatory,
     isSystem: c.isSystem,
+    dueDay: c.dueDay,
   };
 }
 

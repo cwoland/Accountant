@@ -2,10 +2,6 @@ import type { PendingItemDto } from '@accountant/shared';
 import { getPendingRawApi } from './endpoints';
 import { listQueue } from '../lib/offlineQueue';
 
-/**
- * Ряд «Продолжить» = серверные дела + офлайн-очередь.
- * Очередь живёт в IndexedDB и серверу не видна, поэтому склеиваем здесь.
- */
 export async function getPendingApi(params: { accountId?: string | undefined }) {
   const { data } = await getPendingRawApi(params);
   const queued = await listQueue();
@@ -15,6 +11,7 @@ export async function getPendingApi(params: { accountId?: string | undefined }) 
     kind: 'queued',
     id: 'offline-queue',
     title: 'Ждут отправки',
+    icon: 'arrow-left-right',
     subtitle: `${queued.length} записано офлайн`,
     amount: null,
     ink: 2,

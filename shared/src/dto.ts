@@ -26,6 +26,7 @@ export interface CategoryDto {
   ink: number;
   isMandatory: boolean;
   isSystem: boolean;
+  dueDay: number | null;
 }
 
 export interface TransactionDto {
@@ -164,6 +165,8 @@ export interface PendingItemDto {
   kind: 'mandatory' | 'debt' | 'goal' | 'queued';
   id: Id;
   title: string;
+  /** Иконка своей категории: без неё ряд рисовал пустые кружки. */
+  icon: IconName;
   subtitle: string;
   amount: Minor | null;
   ink: number;

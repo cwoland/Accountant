@@ -37,12 +37,12 @@ export default function Rail({ children, selectable = false, label }: RailProps)
     const nudge = (dir: 1 | -1) => {
         const el = ref.current;
         if (!el) return;
-        el.scrollBy({ left: dir * Math.round(el.clientWidth & 0.8), behavior: 'smooth' });
+        el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.8), behavior: 'smooth' });
     };
 
     const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
         if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-        const items = [...(ref.current?.querySelectorAll<HTMLDivElement>('button, a') ?? [])];
+        const items = [...(ref.current?.querySelectorAll<HTMLElement>('button, a') ?? [])];
         const active = document.activeElement;
         const index = active instanceof HTMLElement ? items.indexOf(active) : -1;
         if (index === -1) return;
@@ -56,14 +56,14 @@ export default function Rail({ children, selectable = false, label }: RailProps)
             <div
                 ref={ref}
                 className={styles.rail}
-                role={selectable ? 'listbox' : undefined}
+        role={selectable ? 'group' : undefined}
                 aria-label={label}
                 onKeyDown={onKeyDown}
             >
                 {children}
             </div>
 
-            <div className={styles.nav} aria-hidden>
+            <div className={styles.nav} data-idle={edges.start && edges.end ? 'true' : undefined} aria-hidden>
                 <button type="button" tabIndex={-1} disabled={edges.start} onClick={() => nudge(-1)} aria-label="Назад">
                     <ChevronLeft size={13} strokeWidth={2.6} />
                 </button>

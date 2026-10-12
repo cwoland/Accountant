@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import styles from './Row.module.css';
 
 interface RowProps {
@@ -18,7 +19,7 @@ export default function Row({ title, count, allHref, children }: RowProps) {
         {count && <span className={styles.count}>{count}</span>}
         {allHref && (
           <Link className={styles.all} to={allHref}>
-            Все <span aria-hidden>→</span>
+            Все <ChevronRight size={13} strokeWidth={2.6} aria-hidden />
           </Link>
         )}
       </header>

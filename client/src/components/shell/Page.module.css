@@ -1,0 +1,34 @@
+.page { padding-top: 4px; }
+
+.head {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 0 var(--pad); margin-bottom: 20px;
+}
+.headText { flex: 1; min-width: 0; }
+.title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+.sub { font-size: var(--t-meta); color: var(--bone-3); margin-top: 5px; line-height: 1.5; }
+
+.section { margin-bottom: 26px; }
+.sectionHead {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 0 var(--pad); margin-bottom: 10px;
+}
+.sectionTitle {
+  font-size: var(--t-label); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3);
+}
+.sectionCount {
+  font-family: var(--font-num); font-size: 10px;
+  color: var(--bone-4); letter-spacing: 0.04em;
+}
+
+.grid {
+  display: grid; gap: var(--rail-gap);
+  grid-template-columns: repeat(auto-fill, minmax(138px, 1fr));
+  padding: 0 var(--pad);
+}
+
+@media (min-width: 860px) {
+  .head, .sectionHead, .grid { padding-left: 0; padding-right: 0; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
+}

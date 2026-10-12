@@ -48,3 +48,13 @@
   .hero { padding-left: 0; padding-right: 0; }
   .value { font-size: 84px; }
 }
+
+.value[data-over] { color: var(--over); }
+.sign { margin-right: 0.04em; }
+
+.fill[data-over] {
+  background:
+    repeating-linear-gradient(-45deg,
+      rgba(22,19,15,0) 0 5px, rgba(22,19,15,0.38) 5px 10px),
+    var(--over);
+}

@@ -23,7 +23,7 @@ export default function Hero({
   const spentRatio = hasBudget ? spent / budget : 0;
   const timeRatio = daysPassed / daysInMonth;
   const daysLeft = Math.max(0, daysInMonth - daysPassed);
-  const perDay = daysLeft > 0 ? Math.round(remaining / daysLeft) : 0;
+  const perDay = daysLeft > 0 ? Math.max(0, Math.round(remaining / daysLeft)) : 0;
 
   const tone: Tone = !hasBudget ? 'ok'
     : forecast > budget * 1.05 ? 'over'
@@ -36,13 +36,18 @@ export default function Hero({
     over: 'Бюджет не сойдётся',
   };
 
-  const { amount, symbol } = splitMoney(remaining, currency);
+  const over = remaining < 0;
+  const { amount, symbol } = splitMoney(Math.abs(remaining) as Minor, currency);
 
   return (
     <section className={styles.hero}>
-      <p className={styles.label}>Остаток · {monthLabel}</p>
+      <p className={styles.label}>
+        {over ? 'Перерасход' : 'Остаток'} · {monthLabel}
+      </p>
 
-      <p className={styles.value}>
+      <p className={styles.value} data-over={over || undefined}>
+        {over && <span className={styles.sign} aria-hidden>−</span>}
+        <span className="u-sr">{over ? 'минус ' : ''}</span>
         {amount}
         <span className={styles.symbol}>{symbol}</span>
       </p>
@@ -56,12 +61,21 @@ export default function Hero({
           </p>
 
           <p className={styles.sub}>
-            Из <b className="u-num u-nowrap">{formatMoney(budget, currency)}</b> осталось{' '}
-            <b className="u-num u-nowrap">{formatMoney(remaining, currency)}</b> на{' '}
-            <b className="u-num u-nowrap">
-              {daysLeft} {plural(daysLeft, 'день', 'дня', 'дней')}
-            </b>{' '}
-            — это <b className="u-num u-nowrap">{formatMoney(perDay as Minor, currency)}</b> в день.
+            {over ? (
+              <>
+                Бюджет <b className="u-num u-nowrap">{formatMoney(budget, currency)}</b> превышен на{' '}
+                <b className="u-num u-nowrap">{formatMoney(Math.abs(remaining) as Minor, currency)}</b>,
+                а до конца месяца ещё{' '}
+                <b className="u-num u-nowrap">{daysLeft} {plural(daysLeft, 'день', 'дня', 'дней')}</b>.
+              </>
+            ) : (
+              <>
+                Из <b className="u-num u-nowrap">{formatMoney(budget, currency)}</b> осталось{' '}
+                <b className="u-num u-nowrap">{formatMoney(remaining, currency)}</b> на{' '}
+                <b className="u-num u-nowrap">{daysLeft} {plural(daysLeft, 'день', 'дня', 'дней')}</b>{' '}
+                — это <b className="u-num u-nowrap">{formatMoney(perDay as Minor, currency)}</b> в день.
+              </>
+            )}
           </p>
 
           <div
@@ -73,6 +87,7 @@ export default function Hero({
               <div
                 className={styles.fill}
                 style={{ ['--f' as string]: Math.min(spentRatio, 1) }}
+                data-over={spentRatio > 1 || undefined}
               />
               <div className={styles.today} style={{ left: `${timeRatio * 100}%` }} />
             </div>

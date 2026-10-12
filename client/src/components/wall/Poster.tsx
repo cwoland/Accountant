@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { inkVar } from '../../lib/ink.ts';
+import { inkVar, onInkVar } from '../../lib/ink.ts';
 import styles from './Poster.module.css';
 
 export type PosterShape = 'tile' | 'spine' | 'wide';
@@ -36,9 +36,11 @@ export default function Poster({
     ariaLabel,
 }: PosterProps) {
     const f = Math.max(0, Math.min(ratio, 1));
+    const over = ratio > 1;
 
     const style = {
         '--ink': inkVar(ink),
+    '--on-ink': onInkVar(ink),
         '--f': f,
     } as CSSProperties;
 
@@ -55,6 +57,7 @@ export default function Poster({
         >
             <span className={styles.ground} aria-hidden />
             <span className={styles.fill} aria-hidden />
+      {over && <span className={styles.over} aria-hidden />}
 
             {flag && (
                 <span className={flagAlert ? `${styles.flag} ${styles.flagAlert}` : styles.flag}>

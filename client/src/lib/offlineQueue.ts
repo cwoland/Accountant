@@ -1,10 +1,10 @@
-import type { CreateTransactionBody } from '@accountant/shared';
+import type { TxBody } from '../api/endpoints';
 
 const DB_NAME = 'accountant-offline';
 const DB_VERSION = 2;
 const STORE = 'pending-transactions';
 
-export interface QueuedTransaction extends CreateTransactionBody {
+export interface QueuedTransaction extends TxBody {
   id?: number;
   queuedAt: string;
   attempts: number;
@@ -44,9 +44,7 @@ function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequ
   );
 }
 
-export async function enqueue(
-  data: CreateTransactionBody,
-): Promise<number | null> {
+export async function enqueue(data: TxBody): Promise<number | null> {
   try {
     return await tx<IDBValidKey>('readwrite', (s) =>
       s.add({ ...data, queuedAt: new Date().toISOString(), attempts: 0 }),

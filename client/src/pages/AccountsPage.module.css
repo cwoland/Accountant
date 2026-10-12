@@ -1,0 +1,42 @@
+.invites, .list, .people { list-style: none; padding: 0 var(--pad); }
+
+.invite {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px; margin-bottom: 8px;
+  border: 1px solid color-mix(in srgb, var(--warn) 34%, transparent);
+  background: color-mix(in srgb, var(--warn) 9%, transparent);
+  border-radius: var(--r-tile);
+}
+.inviteText { flex: 1; min-width: 0; }
+.inviteName { font-size: var(--t-body); font-weight: 700; }
+.inviteFrom { font-size: 11.5px; color: var(--bone-3); margin-top: 2px; }
+
+.item {
+  display: flex; align-items: stretch; gap: 4px;
+  border: 1px solid var(--hairline); border-radius: var(--r-tile);
+  margin-bottom: 8px; overflow: hidden;
+  transition: border-color var(--dur) var(--ease);
+}
+.item[data-current] { border-color: var(--bone); }
+.pick { flex: 1; min-width: 0; text-align: left; padding: 13px 14px; }
+.name {
+  display: flex; align-items: center; gap: 6px;
+  font-size: var(--t-body); font-weight: 700;
+}
+.meta {
+  display: block; font-size: 11.5px; color: var(--bone-3);
+  margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.danger {
+  width: 44px; flex: 0 0 auto; color: var(--bone-4);
+  display: grid; place-items: center;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.danger:hover { color: var(--over); background: color-mix(in srgb, var(--over) 12%, transparent); }
+
+.people li {
+  padding: 9px 12px; font-size: var(--t-meta);
+  background: var(--wall-2); border-radius: var(--r-chip); margin-bottom: 4px;
+}
+
+@media (min-width: 860px) { .invites, .list, .people { padding-left: 0; padding-right: 0; } }

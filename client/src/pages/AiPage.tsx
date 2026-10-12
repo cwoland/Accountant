@@ -1,470 +1,101 @@
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Send, TrendingUp, Lightbulb, Tag, Bot, User, BarChart2, Maximize2, Minimize2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { analyzeExpensesApi, getBudgetAdviceApi, categorizeTransactionApi } from '../api/ai';
-import { getStatsApi } from '../api/transactions';
-import useStore from '../store/useStore';
-import useCategories from '../hooks/useCategories';
-import Button from '../components/ui/Button';
-import Card from '../components/ui/Card';
-import { formatCurrency, getMonthRange } from '../utils/formatters';
-import toast from 'react-hot-toast';
+import { useEffect, useRef, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Send, Sparkles } from 'lucide-react';
+import { formatMoney } from '@accountant/shared';
+import { askAiApi } from '../api/endpoints';
+import { errorMessage } from '../api/client';
+import { useAuthStore } from '../store/authStore';
+import { useUiStore } from '../store/uiStore';
+import Page from '../components/shell/Page';
+import styles from './AiPage.module.css';
+
+interface Turn { id: string; role: 'me' | 'ai'; text: string; basis?: string; pending?: boolean }
 
 const QUICK = [
-  { id: 'analyze', icon: <TrendingUp size={16} />, label: 'Анализ расходов',    desc: 'Разбор трат за месяц' },
-  { id: 'advice',  icon: <Lightbulb size={16} />,  label: 'Советы по бюджету',  desc: 'Как оптимизировать' },
-  { id: 'invest',  icon: <BarChart2 size={16} />,  label: 'Инвестиции',         desc: 'Куда вложить деньги' },
-  { id: 'cat',     icon: <Tag size={16} />,         label: 'Категоризация',     desc: 'Определи категорию' },
-];
-
-const Bubble = ({ msg }) => {
-  const isAi = msg.role === 'ai';
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      style={{
-        display: 'flex', gap: 12, justifyContent: isAi ? 'flex-start' : 'flex-end',
-        alignItems: 'flex-end',
-      }}
-    >
-      {isAi && (
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: 'var(--shadow-glow)',
-        }}>
-          <Bot size={16} color="#fff" />
-        </div>
-      )}
-      <div style={{
-        maxWidth: '90%',
-        background: isAi ? 'var(--surface)' : 'var(--accent)',
-        border: isAi ? '1px solid var(--border)' : 'none',
-        borderRadius: isAi ? '4px 16px 16px 16px' : '16px 16px 4px 16px',
-        padding: '12px 16px',
-        fontSize: '0.875rem', lineHeight: 1.65,
-        color: isAi ? 'var(--text-1)' : '#fff',
-        boxShadow: isAi ? 'var(--shadow-s)' : '0 0 20px var(--accent-glow)',
-        whiteSpace: 'pre-wrap',
-      }}>
-        {msg.loading
-          ? <span style={{ display: 'flex', gap: 4, alignItems: 'center', color: 'var(--text-3)' }}>
-              {[0,1,2].map(i => (
-                <motion.span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--text-3)', display: 'inline-block' }}
-                  animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }} />
-              ))}
-            </span>
-          : msg.text
-        }
-      </div>
-      {!isAi && (
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: 'var(--surface-2)', border: '1px solid var(--border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <User size={16} color="var(--text-2)" />
-        </div>
-      )}
-    </motion.div>
-  );
-};
+  { id: 'analyze', label: 'Разбор месяца', question: undefined },
+  { id: 'cut', label: 'Где сократить', question: 'На чём мне реально сократить расходы в этом месяце?' },
+  { id: 'save', label: 'Как накопить', question: 'Сколько я могу откладывать каждый месяц без ущерба?' },
+] as const;
 
 export default function AiPage() {
-  const user = useStore((s) => s.user);
-  const { categories } = useCategories();
-
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-
-  const [messages, setMessages] = useState([
-    {
-      role: 'ai',
-      text: `Привет, ${user?.name?.split(' ')[0] || 'друг'}! 👋\n\nЯ ИИ-советник по финансам. Могу проанализировать твои расходы, дать советы по бюджету или определить категорию транзакции.\n\nВыбери быстрое действие ниже или напиши свой вопрос.`,
-    },
-  ]);
+  const user = useAuthStore((s) => s.user);
+  const accountId = useUiStore((s) => s.activeAccountId);
+  const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [activeQuick, setActiveQuick] = useState(null);
-  const [catInput, setCatInput] = useState('');
-  const [vh, setVh] = useState(window.innerHeight);
-  const bottomRef = useRef(null);
-  const range = getMonthRange(0);
+  const bottom = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior: 'smooth' }); }, [turns]);
 
-  const [fullScreen, setFullScreen] = useState(false);
-
-  useEffect(() => {
-    if (!fullScreen) {
-      document.body.style.overflow = '';
-      return;
-    }
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [fullScreen]);
-
-
-  useEffect(() => {
-    const updateHeight = () => {
-      setVh(window.innerHeight);
-    };
-
-    window.addEventListener('resize', updateHeight);
-
-    return () => {
-      window.addEventListener('resize', updateHeight);
-    };
-  }, []);
-
-  const { data: stats } = useQuery({
-    queryKey: ['stats', range],
-    queryFn: () => getStatsApi(range).then((r) => r.data),
+  const ask = useMutation({
+    mutationFn: (question?: string) =>
+      askAiApi({ ...(question ? { question } : {}), ...(accountId ? { accountId } : {}) }).then((r) => r.data),
+    onMutate: (question) => {
+      const pendingId = `p-${Date.now()}`;
+      setTurns((t) => [
+        ...t,
+        ...(question ? [{ id: `m-${Date.now()}`, role: 'me' as const, text: question }] : []),
+        { id: pendingId, role: 'ai' as const, text: '', pending: true },
+      ]);
+      return { pendingId };
+    },
+    onSuccess: (data, _q, ctx) => {
+      const basis = `за период: доходы ${formatMoney(data.basis.income, user?.currency ?? 'RUB')}, расходы ${formatMoney(data.basis.expense, user?.currency ?? 'RUB')}`;
+      setTurns((t) => t.map((x) => (x.id === ctx?.pendingId ? { ...x, text: data.text, basis, pending: false } : x)));
+    },
+    onError: (err, _q, ctx) => {
+      setTurns((t) => t.map((x) =>
+        x.id === ctx?.pendingId ? { ...x, text: errorMessage(err, 'Советник не ответил'), pending: false } : x));
+    },
   });
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const pushMsg = (role, text, loading = false) => {
-    const msg = { role, text, loading, id: Date.now() + Math.random() };
-    setMessages((m) => [...m, msg]);
-    return msg.id;
-  };
-
-  const updateMsg = (id, text) => {
-    setMessages((m) => m.map((msg) => msg.id === id ? { ...msg, text, loading: false } : msg));
-  };
-
-  const handleQuick = async (id) => {
-    setActiveQuick(id);
-    if (id === 'cat') return;
-
-    if (id === 'analyze') {
-      if (!stats?.summary?.expense && !stats?.summary?.income) {
-        pushMsg('ai',
-      '📊 У тебя пока нет транзакций за этот месяц.\n\n' +
-      'Добавь несколько доходов и расходов на странице Транзакции — ' +
-      'и я смогу сделать полноценный анализ твоих финансов!'
-    );
-    setActiveQuick(null);
-        return;
-      }
-      pushMsg('user', 'Проанализируй мои расходы за этот месяц');
-      setLoading(true);
-      const loadId = pushMsg('ai', '', true);
-      try {
-        const { data } = await analyzeExpensesApi({
-          stats: stats.summary,
-          byCategory: stats.byCategory,
-          currency: user?.currency,
-        });
-        updateMsg(loadId, data.text);
-      } catch {
-        updateMsg(loadId, 'Ошибка обращения к ИИ. Попробуй позже.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (id === 'advice') {
-      pushMsg('user', 'Дай советы по оптимизации бюджета');
-      setLoading(true);
-      const loadId = pushMsg('ai', '', true);
-      try {
-        const { data } = await getBudgetAdviceApi({
-          income: stats?.summary?.income || 0,
-          expense: stats?.summary?.expense || 0,
-          monthlyBudget: user?.monthlyBudget || 0,
-          currency: user?.currency,
-        });
-        updateMsg(loadId, data.text);
-      } catch {
-        updateMsg(loadId, 'Ошибка обращения к ИИ. Попробуй позже.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (id === 'invest') {
-      pushMsg('user', 'Дай советы по инвестициям на основе моего бюджета');
-      setLoading(true);
-      const loadId = pushMsg('ai', '', true);
-      try {
-        const { data } = await getBudgetAdviceApi({
-          income: stats?.summary?.income || 0,
-          expense: stats?.summary?.expense || 0,
-          monthlyBudget: user?.monthlyBudget || 0,
-          currency: user?.currency,
-          customQuestion:
-          `У меня ежемесячный доход ${stats?.summary?.income || 0} ${user?.currency || 'RUB'} ` + 
-          `и расходы ${stats?.summary?.expense || 0} ${user?.currency || 'RUB'}. ` + 
-          `Свободные средства: ${stats?.summary?.balance || 0} ${user?.currency || 'RUB'}. ` +
-          `Дай 3 конкретных совета по инвестированию свободных средств с учётом моего уровня дохода. ` +
-          `Укажи инструменты (вклады, акции, облигации, ETF и т.д.), риски и ожидаемую доходность. ` +
-          `Ответ на русском языке, нумерованный список.`,
-        });
-        updateMsg(loadId, data.text);
-      } catch {
-        updateMsg(loadId, 'Не удалось получить ответ. Попробуй позже');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const handleCategorize = async () => {
-    if (!catInput.trim()) return toast.error('Введите описание');
-    pushMsg('user', `Определи категорию: "${catInput}"`);
-    setLoading(true);
-    const loadId = pushMsg('ai', '', true);
-    try {
-      const { data } = await categorizeTransactionApi({ description: catInput, categories });
-      updateMsg(loadId, `Предлагаемая категория: **${data.category}**\n\nЕсли не подходит — выбери вручную при добавлении транзакции.`);
-    } catch {
-      updateMsg(loadId, 'Ошибка категоризации. Попробуй позже.');
-    } finally {
-      setLoading(false);
-      setCatInput('');
-    }
-  };
-
-  const handleSend = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+  const send = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = input.trim();
+    if (!q || ask.isPending) return;
     setInput('');
-    pushMsg('user', text);
-    setLoading(true);
-    const loadId = pushMsg('ai', '', true);
-    try {
-      const { data } = await getBudgetAdviceApi({
-        income: stats?.summary?.income || 0,
-        expense: stats?.summary?.expense || 0,
-        monthlyBudget: user?.monthlyBudget || 0,
-        currency: user?.currency,
-        customQuestion: text,
-      });
-      updateMsg(loadId, data.text);
-    } catch {
-      updateMsg(loadId, 'Не удалось получить ответ. Проверь подключение.');
-    } finally {
-      setLoading(false);
-    }
+    ask.mutate(q);
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 20,
-      ...(fullScreen ? {
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 9999,
-        height: vh,
-        background: 'var(--bg)',
-        padding: isMobile ? 12 : 20,
-        overflow: 'hidden',
-      } : {
-        height: `calc(${vh}px - var(--header-h) - 64px)`,
-      }),
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, flexWrap: isMobile ? 'wrap' : 'nowrap', }}>
-        <div style={{
-          width: 48, height: 48, borderRadius: 'var(--radius-m)',
-          background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: 'var(--shadow-glow)',
-        }}>
-          <Sparkles size={22} color="#fff" />
-        </div>
-        <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>ИИ-советник</h2>
-          <p style={{ color: 'var(--text-3)', fontSize: '0.82rem', marginTop: 2 }}>
-            Powered by LLAMA 3.1 · OpenRouter
-          </p>
-        </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8,
-          background: 'var(--green-dim)', padding: '6px 14px', borderRadius: 99 }}>
-          <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--green)',
-            animation: 'pulse 2s ease-in-out infinite' }} />
-          <span style={{ fontSize: '0.78rem', color: 'var(--green)', fontWeight: 600 }}>Online</span>
-        </div>
-
-        <button
-        onClick={() => setFullScreen(v => !v)}
-        title={fullScreen ? 'Свернуть' : 'На весь экран'}
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 'var(--radius-m)',
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          color: 'var(--text-2)',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'var(--transition)',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent-2)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
-        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-        >
-          {fullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 10, flexShrink: 0 }}>
+    <Page title="Советник" sub="Считает по вашим реальным операциям за текущий месяц">
+      <div className={styles.quick}>
         {QUICK.map((q) => (
-          <motion.button key={q.id} whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-            onClick={() => handleQuick(q.id)} disabled={loading}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 12,
-              padding: '12px 16px', borderRadius: 'var(--radius-m)', cursor: 'pointer',
-              background: activeQuick === q.id ? 'var(--accent-dim)' : 'var(--surface)',
-              border: `1px solid ${activeQuick === q.id ? 'rgba(124,106,247,0.35)' : 'var(--border)'}`,
-              color: activeQuick === q.id ? 'var(--accent-2)' : 'var(--text-2)',
-              textAlign: 'left', transition: 'var(--transition)',
-              opacity: loading ? 0.6 : 1,
-            }}>
-            <div style={{
-              width: 34, height: 34, borderRadius: 'var(--radius-s)', flexShrink: 0,
-              background: activeQuick === q.id ? 'var(--accent)' : 'var(--surface-2)',
-              color: activeQuick === q.id ? '#fff' : 'var(--text-3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'var(--transition)',
-            }}>
-              {q.icon}
-            </div>
-            <div>
-              <p style={{ fontSize: '0.82rem', fontWeight: 600,
-                color: activeQuick === q.id ? 'var(--accent-2)' : 'var(--text-1)' }}>
-                {q.label}
-              </p>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: 1 }}>{q.desc}</p>
-            </div>
-          </motion.button>
+          <button key={q.id} type="button" className={styles.chip} disabled={ask.isPending}
+            onClick={() => ask.mutate(q.question)}>
+            <Sparkles size={13} aria-hidden /> {q.label}
+          </button>
         ))}
       </div>
 
-      <AnimatePresence>
-        {activeQuick === 'cat' && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }} style={{ flexShrink: 0 }}>
-            <Card style={{ padding: '16px 20px' }}>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-2)', marginBottom: 12, fontWeight: 600 }}>
-                Введите описание транзакции — ИИ определит категорию
-              </p>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <input
-                  placeholder="Например: Оплата Яндекс Плюс"
-                  value={catInput}
-                  onChange={(e) => setCatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleCategorize()}
-                  style={{
-                    flex: 1, background: 'var(--surface-2)',
-                    border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
-                    padding: '10px 14px', color: 'var(--text-1)', fontSize: '0.875rem',
-                  }}
-                />
-                <Button onClick={handleCategorize} loading={loading} icon={<Sparkles size={15} />}>
-                  Определить
-                </Button>
-              </div>
-            </Card>
-          </motion.div>
+      <div className={styles.log} role="log" aria-live="polite">
+        {turns.length === 0 && (
+          <p className={styles.intro}>
+            Спросите что угодно о своих финансах — или нажмите кнопку выше.
+            Ответ строится только на ваших операциях; выдуманных цифр здесь не будет.
+          </p>
         )}
-      </AnimatePresence>
-
-      <Card style={{
-        flex: 1, 
-        display: 'flex', 
-        flexDirection: 'column',
-        padding: 0, 
-        overflow: 'hidden', 
-        minHeight: 0,
-        height: fullScreen ? '100%' : 'auto',
-      }}>
-        <div style={{
-          flex: 1, 
-          minHeight: 0,
-          overflowY: 'auto',
-          WebKitOverflowScrolling: 'touch',
-          padding: isMobile ? 12 : 20,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}>
-          <AnimatePresence>
-            {messages.map((msg) => <Bubble key={msg.id || msg.text} msg={msg} />)}
-          </AnimatePresence>
-          <div ref={bottomRef} />
-        </div>
-
-        {stats?.summary && (
-          <div style={{
-            padding: '10px 20px', borderTop: '1px solid var(--border)',
-            display: 'flex', flexWrap: 'wrap', gap: 12, background: 'var(--bg-2)',
-          }}>
-            {[
-              { label: 'Доходы', value: formatCurrency(stats.summary.income, user?.currency), color: 'var(--green)' },
-              { label: 'Расходы', value: formatCurrency(stats.summary.expense, user?.currency), color: 'var(--red)' },
-              { label: 'Баланс', value: formatCurrency(stats.summary.balance, user?.currency), color: 'var(--accent-2)' },
-            ].map((s) => (
-              <div key={s.label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-3)' }}>{s.label}:</span>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: s.color }}>{s.value}</span>
-              </div>
-            ))}
+        {turns.map((t) => (
+          <div key={t.id} className={styles.turn} data-role={t.role}>
+            {t.pending ? (
+              <span className={styles.dots} aria-label="Советник думает"><i /><i /><i /></span>
+            ) : (
+              <>
+                <p className={styles.text}>{t.text}</p>
+                {t.basis && <p className={styles.basis}>{t.basis}</p>}
+              </>
+            )}
           </div>
-        )}
-        <div style={{
-          padding: isMobile ? '10px 12px' : '14px 16px',
-          borderTop: '1px solid var(--border)',
-          display: 'flex',
-          gap: 10,
-          alignItems: 'flex-end',
-          flexShrink: 0,
-          background: 'var(--surface)',
-        }}>
-          <textarea
-            placeholder="Задай вопрос по финансам..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-            rows={1}
-            style={{
-              flex: 1, background: 'var(--surface-2)',
-              border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
-              padding: '10px 14px', color: 'var(--text-1)', fontSize: '0.875rem',
-              resize: 'none', lineHeight: 1.5, maxHeight: 120, overflowY: 'auto',
-            }}
-          />
-          <motion.button
-            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-            onClick={handleSend} disabled={!input.trim() || loading}
-            style={{
-              width: 42, height: 42, borderRadius: 'var(--radius-m)',
-              background: input.trim() && !loading ? 'var(--accent)' : 'var(--surface-2)',
-              color: input.trim() && !loading ? '#fff' : 'var(--text-3)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
-              boxShadow: input.trim() && !loading ? 'var(--shadow-glow)' : 'none',
-              transition: 'var(--transition)', flexShrink: 0,
-            }}>
-            <Send size={17} />
-          </motion.button>
-        </div>
-      </Card>
-    </div>
+        ))}
+        <div ref={bottom} />
+      </div>
+
+      <form className={styles.compose} onSubmit={send}>
+        <input className={styles.input} value={input} placeholder="Ваш вопрос" aria-label="Вопрос советнику"
+          onChange={(e) => setInput(e.target.value)} />
+        <button type="submit" className={styles.send} disabled={!input.trim() || ask.isPending} aria-label="Спросить">
+          <Send size={16} aria-hidden />
+        </button>
+      </form>
+    </Page>
   );
 }

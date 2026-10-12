@@ -10,3 +10,9 @@ export function inkVar(index: number | null | undefined): string {
 export function inkStyle(index: number | null | undefined): React.CSSProperties {
     return { ['--ink' as string]: inkVar(index) };
 }
+
+export function onInkVar(index: number | null | undefined): string {
+  if (index === null || index === undefined) return 'var(--bone)';
+  const i = ((index % INKS.length) + INKS.length) % INKS.length;
+  return `var(--on-ink-${i})`;
+}

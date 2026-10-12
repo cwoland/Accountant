@@ -8,8 +8,8 @@
 
     --bone:       #F2EDE3;
     --bone-2:     #C4BBAA;
-    --bone-3:     #8B8172;
-    --bone-4:     #5D5547;
+    --bone-3:     #A2988A;
+    --bone-4:     #8A8376;
     --on-bone:    #16130F;
 
     --ink-0:      #E8482D;
@@ -25,9 +25,25 @@
     --ink-10:     #44525E;
     --ink-11:     #7A1F2B;
 
-    --over:       #E8482D;
-    --ok:         #2E9E6B;
-    --warn:       #D99A1F;
+    /* Текст поверх краски. Десять красок тёмные — на них кость даёт 5–8:1.
+       Киноварь и охра светлые: кость даёт 3.3 и 2.1, там нужен тёмный
+       (4.8 и 7.6). Затемнять сами краски нельзя — они и есть цвет продукта. */
+    --on-ink-0:   #16130F;
+    --on-ink-1:   #16130F;
+    --on-ink-2:   #F2EDE3;
+    --on-ink-3:   #F2EDE3;
+    --on-ink-4:   #F2EDE3;
+    --on-ink-5:   #F2EDE3;
+    --on-ink-6:   #F2EDE3;
+    --on-ink-7:   #F2EDE3;
+    --on-ink-8:   #F2EDE3;
+    --on-ink-9:   #F2EDE3;
+    --on-ink-10:  #F2EDE3;
+    --on-ink-11:  #F2EDE3;
+
+    --over:       #FF6B4A;
+    --ok:         #3FBF86;
+    --warn:       #F0B429;
 
     --font-word:  'Golos Text', system-ui, -apple-system, sans-serif;
     --font-big:   'Unbounded', 'Golos Text', system-ui, sans-serif;

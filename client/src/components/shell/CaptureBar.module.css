@@ -1,6 +1,7 @@
 .bar {
+  display: none;
   position: fixed; left: 0; right: 0; bottom: 0; z-index: var(--z-capture);
-  display: flex; gap: 9px; align-items: center;
+  gap: 9px; align-items: center;
   max-width: 1240px; margin: 0 auto;
   padding: 10px var(--pad) calc(10px + var(--safe-b));
   background: linear-gradient(transparent, var(--ground) 36%);
@@ -21,6 +22,7 @@
 
 @media (min-width: 860px) {
   .bar {
+    display: flex;
     position: static; grid-column: 1; grid-row: 2;
     background: none; max-width: none; margin: 0;
     padding: 2px 14px 16px var(--pad);

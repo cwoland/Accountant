@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import { asMinor, objectId, type PendingItemDto } from '@accountant/shared';
+import { asMinor, objectId, toIconName, type PendingItemDto } from '@accountant/shared';
 import { Category } from '../models/Category.js';
 import { Transaction } from '../models/Transaction.js';
 import { Debt } from '../models/Debt.js';
@@ -47,6 +47,7 @@ export const getPending: RequestHandler = async (req, res, next) => {
         kind: 'mandatory',
         id: c._id.toString(),
         title: c.name,
+        icon: toIconName(c.icon),
         subtitle: 'не оплачено в этом месяце',
         amount: null,
         ink: c.ink,
@@ -60,6 +61,7 @@ export const getPending: RequestHandler = async (req, res, next) => {
         kind: 'debt',
         id: d._id.toString(),
         title: d.name,
+        icon: 'landmark',
         subtitle: 'платёж по долгу',
         amount: asMinor(d.totalAmount - d.paidAmount),
         ink: 11,

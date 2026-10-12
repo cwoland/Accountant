@@ -1,37 +1,60 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import api from '../api/axios';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { MessageDto } from '@accountant/shared';
+import { getMessagesApi, sendMessageApi } from '../api/endpoints';
 
-export default function useAccountChat(accountId) {
-  const [messages, setMessages] = useState([]);
+const POLL_ACTIVE = 8_000;
+const POLL_IDLE = 60_000;
+
+export function useAccountChat(accountId: string | null) {
+  const [messages, setMessages] = useState<MessageDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
-  const lastIdRef = useRef(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const fetchMessages = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     if (!accountId) return;
     try {
-      const { data } = await api.get(`/messages/${accountId}`);
-      setMessages(data);
-      if (data.length > 0) lastIdRef.current = data[data.length - 1]._id;
-    } catch {}
+      const { data } = await getMessagesApi(accountId, { limit: 50 });
+      setMessages(data.items);
+    } catch {
+
+    }
   }, [accountId]);
 
   useEffect(() => {
-    if (!accountId) return;
+    if (!accountId) { setMessages([]); return; }
+
+    let stopped = false;
     setLoading(true);
-    fetchMessages().finally(() => setLoading(false));
+    void fetchAll().finally(() => setLoading(false));
 
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [accountId, fetchMessages]);
+    const tick = () => {
+      if (stopped) return;
+      const delay = document.visibilityState === 'visible' ? POLL_ACTIVE : POLL_IDLE;
+      timer.current = setTimeout(() => {
+        if (document.visibilityState === 'visible') void fetchAll();
+        tick();
+      }, delay);
+    };
+    tick();
 
-  const send = useCallback(async (text) => {
-    if (!text?.trim() || !accountId) return;
+    const onVisible = () => { if (document.visibilityState === 'visible') void fetchAll(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      stopped = true;
+      clearTimeout(timer.current);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [accountId, fetchAll]);
+
+  const send = useCallback(async (text: string) => {
+    if (!accountId || !text.trim()) return;
     setSending(true);
     try {
-      const { data } = await api.post(`/messages/${accountId}`, { text });
+      const { data } = await sendMessageApi(accountId, text.trim());
       setMessages((prev) => [...prev, data]);
-    } catch {} finally {
+    } finally {
       setSending(false);
     }
   }, [accountId]);

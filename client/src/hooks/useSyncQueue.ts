@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { dequeue, listQueue, markAttempt } from '../lib/offlineQueue';
-import { createTransactionApi } from '../api/transactions';
+import { createTransactionApi } from '../api/endpoints';
 import { useOnline } from './useOnline';
 
 const MAX_ATTEMPTS = 5;

@@ -1,4 +1,4 @@
-.app { max-width: 1240px; margin: 0 auto; padding-bottom: calc(84px + var(--safe-b)); }
+.app { max-width: 1240px; margin: 0 auto; padding-bottom: calc(78px + var(--safe-b)); }
 .main { min-width: 0; }
 
 @media (min-width: 860px) {

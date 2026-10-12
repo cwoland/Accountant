@@ -1,387 +1,143 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { User, Mail, Lock, Wallet, Globe, Save, Camera, Bell, BellOff, Briefcase, GraduationCap, Laptop, Shield, Crown, Rocket, Star, Gem, Trophy, Heart } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Bell, BellOff, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { updateProfileApi, changePasswordApi } from '../api/auth';
+import { CURRENCIES, CURRENCY_SYMBOL, formatMoney, parseMinor, type Currency } from '@accountant/shared';
+import { changePasswordApi, updateProfileApi } from '../api/endpoints';
+import { errorFields, errorMessage } from '../api/client';
 import { subscribeToPush, unsubscribeFromPush } from '../utils/push';
-import useStore from '../store/useStore';
+import { useAuthStore } from '../store/authStore';
+import Page, { Section } from '../components/shell/Page';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
-import Card from '../components/ui/Card';
-import Select from '../components/ui/Select';
+import { Field, SelectField } from '../components/ui/Field';
 
-const FADE = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
-
-const CURRENCIES = [
-  { value: 'RUB', label: '🇷🇺 Российский рубль (₽)' },
-  { value: 'USD', label: '🇺🇸 Доллар США ($)' },
-  { value: 'EUR', label: '🇪🇺 Евро (€)' },
-];
-
-const AVATARS = {
-  user: User,
-  briefcase: Briefcase,
-  graduation: GraduationCap,
-  laptop: Laptop,
-  shield: Shield,
-  crown: Crown,
-  rocket: Rocket,
-  star: Star,
-  wallet: Wallet,
-  gem: Gem,
-  trophy: Trophy,
-  heart: Heart,
+const CURRENCY_NAMES: Record<Currency, string> = {
+  RUB: 'Российский рубль',
+  USD: 'Доллар США',
+  EUR: 'Евро',
 };
 
 export default function ProfilePage() {
-  const { user, setUser } = useStore();
-  const [profileForm, setProfileForm] = useState({
-    name: user?.name || '',
-    currency: user?.currency || 'RUB',
-    monthlyBudget: user?.monthlyBudget || '',
-    avatar: user?.avatar || '',
+  const { user, setUser, setAuth, logout } = useAuthStore();
+  const [profile, setProfile] = useState({
+    name: user?.name ?? '',
+    currency: (user?.currency ?? 'RUB') as Currency,
+    budget: user ? String(user.monthlyBudget / 100) : '',
   });
-  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
-  const [pwErrors, setPwErrors] = useState({});
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [pwLoading, setPwLoading] = useState(false);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pw, setPw] = useState({ current: '', next: '', repeat: '' });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pushOn, setPushOn] = useState(false);
 
   useEffect(() => {
-    if (!navigator.serviceWorker) return;
-
-    navigator.serviceWorker?.ready.then(async (reg) => {
-      const sub = await reg.pushManager.getSubscription();
-      setPushEnabled(!!sub);
-    });
+    if (!('serviceWorker' in navigator)) return;
+    void navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setPushOn(Boolean(sub)))
+      .catch(() => setPushOn(false));
   }, []);
 
-  const setP = (f) => (e) => setProfileForm((prev) => ({ ...prev, [f]: e.target ? e.target.value : e }));
-  const setPw = (f) => (e) => { setPwForm((prev) => ({ ...prev, [f]: e.target.value }));
-  setPwErrors((prev) => ({
-    ...prev,
-    [field]: undefined,
-  }));
-};
+  const saveProfile = useMutation({
+    mutationFn: updateProfileApi,
+    onSuccess: (res) => { setUser(res.data); toast.success('Сохранено'); },
+    onError: (e) => { setErrors(errorFields(e)); toast.error(errorMessage(e, 'Не удалось сохранить')); },
+  });
 
-  const budget = Number(profileForm.monthlyBudget);
+  const savePassword = useMutation({
+    mutationFn: changePasswordApi,
+    onSuccess: (res) => {
+      setAuth(res.data.user, res.data.token);
+      setPw({ current: '', next: '', repeat: '' });
+      toast.success('Пароль изменён. Остальные устройства разлогинены.');
+    },
+    onError: (e) => { setErrors(errorFields(e)); toast.error(errorMessage(e, 'Не удалось сменить пароль')); },
+  });
 
-  if (Number.isNaN(budget)) {
-    toast.error('Введите корректный бюджет');
-    return;
-  }
-
-  const handleProfile = async (e) => {
+  const submitProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setProfileLoading(true);
-    try {
-      const { data } = await updateProfileApi({
-        name: profileForm.name,
-        currency: profileForm.currency,
-        monthlyBudget: parseFloat(profileForm.monthlyBudget) || 0,
-        avatar: profileForm.avatar,
-      });
-      setUser(data);
-      toast.success('Профиль обновлён');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка обновления');
-    } finally {
-      setProfileLoading(false);
-    }
+    const minor = profile.budget.trim() ? parseMinor(profile.budget) : 0;
+    if (minor === null) { setErrors({ monthlyBudget: 'Некорректная сумма' }); return; }
+    setErrors({});
+    saveProfile.mutate({ name: profile.name.trim(), currency: profile.currency, monthlyBudget: minor });
   };
 
-  const handlePassword = async (e) => {
+  const submitPassword = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const errs = {};
-    if (!pwForm.currentPassword) errs.currentPassword = 'Введите текущий пароль';
-    if (pwForm.newPassword.length < 6) errs.newPassword = 'Минимум 6 символов';
-    if (pwForm.newPassword !== pwForm.confirm) errs.confirm = 'Пароли не совпадают';
-    setPwErrors(errs);
-    if (Object.keys(errs).length) return;
-
-    setPwLoading(true);
-    try {
-      await changePasswordApi({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword });
-      toast.success('Пароль изменён');
-      setPwForm({ currentPassword: '', newPassword: '', confirm: '' });
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Ошибка смены пароля');
-    } finally {
-      setPwLoading(false);
-    }
+    if (pw.next !== pw.repeat) { setErrors({ repeat: 'Пароли не совпадают' }); return; }
+    setErrors({});
+    savePassword.mutate({ currentPassword: pw.current, newPassword: pw.next });
   };
 
-  const handlePushToggle = async () => {
-    if (pushEnabled) {
-      await unsubscribeFromPush();
-      toast.success('Уведомления отключены');
-      setPushEnabled(false);
-    } else {
-      const result = await subscribeToPush();
-      if (result) { toast.success('Уведомления включены'); setPushEnabled(true); }
-      else toast.error('Не удалось включить уведомления');
-    }
+  const togglePush = async () => {
+    if (pushOn) { await unsubscribeFromPush(); setPushOn(false); toast.success('Уведомления выключены'); return; }
+    const ok = await subscribeToPush();
+    setPushOn(ok);
+    toast[ok ? 'success' : 'error'](ok ? 'Уведомления включены' : 'Браузер не дал разрешение');
   };
-
-  const currencySymbol = { RUB: '₽', USD: '$', EUR: '€' }[profileForm.currency] || '₽';
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show"
-      style={{ display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 680 }}>
+    <Page title="Профиль" sub={user?.email}>
+      <Section title="Основное">
+        <form onSubmit={submitProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 var(--pad)' }}>
+          <Field label="Имя" value={profile.name} error={errors.name}
+            onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))} />
 
-      <motion.div variants={FADE}>
-        <Card style={{
-          background: 'linear-gradient(135deg, var(--accent-dim), var(--surface))',
-          border: '1px solid rgba(124,106,247,0.2)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                width: 72, height: 72, borderRadius: '50%',
-                background: 'var(--accent-dim)', border: '2px solid var(--accent)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: profileForm.avatar ? '2.2rem' : '1.6rem',
-                cursor: 'pointer', userSelect: 'none',
-              }} onClick={() => setShowAvatarPicker((v) => !v)}>
-                {(() => {
-                  const AvatarIcon = AVATARS[profileForm.avatar];
-                  return AvatarIcon ? <AvatarIcon size={30} color="var(--accent)" /> : <User size={28} color="var(--accent)" />;
-                })()}
-              </div>
-              <div style={{
-                position: 'absolute', bottom: 0, right: 0,
-                width: 22, height: 22, borderRadius: '50%',
-                background: 'var(--accent)', border: '2px solid var(--bg)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-              }} onClick={() => setShowAvatarPicker((v) => !v)}>
-                <Camera size={10} color="#fff" />
-              </div>
-            </div>
-            <div>
-              <h2 style={{ fontSize: '1.3rem', fontWeight: 700 }}>{user?.name}</h2>
-              <p style={{ color: 'var(--text-3)', fontSize: '0.82rem', marginTop: 3 }}>{user?.email}</p>
-              <p style={{ color: 'var(--accent-2)', fontSize: '0.78rem', marginTop: 6, cursor: 'pointer' }}
-                onClick={() => setShowAvatarPicker((v) => !v)}>
-                Изменить аватар
-              </p>
-            </div>
+          <SelectField
+            label="Валюта"
+            value={profile.currency}
+            onChange={(e) => setProfile((p) => ({ ...p, currency: e.target.value as Currency }))}
+            options={CURRENCIES.map((c) => ({ value: c, label: `${CURRENCY_SYMBOL[c]}  ${CURRENCY_NAMES[c]}` }))}
+          />
+
+          <Field
+            label="Бюджет на месяц"
+            inputMode="decimal"
+            placeholder="0"
+            value={profile.budget}
+            error={errors.monthlyBudget}
+            suffix={CURRENCY_SYMBOL[profile.currency]}
+            hint={user ? `Сейчас: ${formatMoney(user.monthlyBudget, user.currency)}` : undefined}
+            onChange={(e) => setProfile((p) => ({ ...p, budget: e.target.value }))}
+          />
+
+          <Button type="submit" variant="bone" size="md" loading={saveProfile.isPending}>Сохранить</Button>
+        </form>
+      </Section>
+
+      <Section title="Уведомления">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 var(--pad)' }}>
+          {pushOn ? <Bell size={18} /> : <BellOff size={18} color="var(--bone-4)" />}
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 'var(--t-body)', fontWeight: 700 }}>Push-уведомления</p>
+            <p style={{ fontSize: '11.5px', color: 'var(--bone-3)', marginTop: 2 }}>
+              Обязательные платежи, итоги месяца, сообщения в чате
+            </p>
           </div>
+          <Button variant={pushOn ? 'quiet' : 'bone'} size="sm" onClick={() => void togglePush()}>
+            {pushOn ? 'Выключить' : 'Включить'}
+          </Button>
+        </div>
+      </Section>
 
-          {showAvatarPicker && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              style={{
-                marginTop: 16, padding: 12,
-                background: 'var(--surface-2)', borderRadius: 'var(--radius-m)',
-                border: '1px solid var(--border)',
-                display: 'flex', flexWrap: 'wrap', gap: 8,
-              }}>
-              {Object.entries(AVATARS).map(([key, Icon]) => (
-                <button key={key} onClick={() => { setProfileForm((f) => ({ ...f, avatar: key })); setShowAvatarPicker(false); }}
-                  style={{
-                    width: 40, height: 40, borderRadius: 'var(--radius-s)',
-                    fontSize: '1.4rem', cursor: 'pointer',
-                    background: profileForm.avatar === key ? 'var(--accent-dim)' : 'var(--surface)',
-                    border: profileForm.avatar === key ? '2px solid var(--accent)' : '2px solid transparent',
-                    transition: 'var(--transition)',
-                  }}>
-                  <Icon size={20} />
-                </button>
-              ))}
-              <button onClick={() => { setProfileForm((f) => ({ ...f, avatar: '' })); setShowAvatarPicker(false); }}
-                style={{
-                  padding: '0 12px', height: 40, borderRadius: 'var(--radius-s)',
-                  fontSize: '0.72rem', cursor: 'pointer', color: 'var(--text-3)',
-                  background: 'var(--surface)', border: '2px solid transparent',
-                  fontWeight: 600,
-                }}>
-                Сбросить
-              </button>
-            </motion.div>
-          )}
-        </Card>
-      </motion.div>
+      <Section title="Безопасность">
+        <form onSubmit={submitPassword} style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '0 var(--pad)' }}>
+          <Field label="Текущий пароль" type="password" autoComplete="current-password"
+            value={pw.current} error={errors.currentPassword}
+            onChange={(e) => setPw((p) => ({ ...p, current: e.target.value }))} />
+          <Field label="Новый пароль" type="password" autoComplete="new-password"
+            value={pw.next} error={errors.newPassword} hint="Минимум 10 символов, не только цифры"
+            onChange={(e) => setPw((p) => ({ ...p, next: e.target.value }))} />
+          <Field label="Повторите" type="password" autoComplete="new-password"
+            value={pw.repeat} error={errors.repeat}
+            onChange={(e) => setPw((p) => ({ ...p, repeat: e.target.value }))} />
+          <Button type="submit" variant="quiet" size="md" loading={savePassword.isPending}>Сменить пароль</Button>
+        </form>
+      </Section>
 
-      <motion.div variants={FADE}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 'var(--radius-s)',
-              background: 'var(--accent-dim)', color: 'var(--accent-2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <User size={17} />
-            </div>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>Личные данные</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 1 }}>Имя, валюта, бюджет</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleProfile} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Input label="Имя" value={profileForm.name}
-              onChange={setP('name')} icon={<User size={16} />} required />
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Select label="Валюта" value={profileForm.currency}
-                onChange={(e) => setProfileForm((f) => ({ ...f, currency: e.target.value }))}
-                options={CURRENCIES}
-              />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{
-                  fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)',
-                  letterSpacing: '0.05em', textTransform: 'uppercase',
-                  fontFamily: 'var(--font-display)',
-                }}>Бюджет месяца</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{
-                    position: 'absolute', left: 13, top: '50%',
-                    transform: 'translateY(-50%)', color: 'var(--text-3)', fontSize: '0.9rem',
-                  }}>{currencySymbol}</span>
-                  <input
-                    type="number" min="0" placeholder="0"
-                    value={profileForm.monthlyBudget}
-                    onChange={setP('monthlyBudget')}
-                    style={{
-                      width: '100%', background: 'var(--surface)',
-                      border: '1px solid var(--border-2)', borderRadius: 'var(--radius-m)',
-                      padding: '12px 14px 12px 30px', color: 'var(--text-1)', fontSize: '0.9rem',
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{
-                fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)',
-                letterSpacing: '0.05em', textTransform: 'uppercase',
-                fontFamily: 'var(--font-display)',
-              }}>Email</label>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                background: 'var(--surface)', border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-m)', padding: '12px 14px',
-                color: 'var(--text-3)', fontSize: '0.9rem',
-              }}>
-                <Mail size={16} color="var(--text-3)" />
-                {user?.email}
-              </div>
-            </div>
-
-            <Button type="submit" icon={<Save size={15} />} loading={profileLoading}>
-              Сохранить изменения
-            </Button>
-          </form>
-        </Card>
-      </motion.div>
-
-      <motion.div variants={FADE}>
-        <Card>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 'var(--radius-s)',
-              background: 'var(--amber-dim)', color: 'var(--amber)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Lock size={17} />
-            </div>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>Безопасность</p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 1 }}>Смена пароля</p>
-            </div>
-          </div>
-
-          <form onSubmit={handlePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Input label="Текущий пароль" type="password"
-              placeholder="Введите текущий пароль"
-              value={pwForm.currentPassword} onChange={setPw('currentPassword')}
-              error={pwErrors.currentPassword} icon={<Lock size={16} />} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Input label="Новый пароль" type="password"
-                placeholder="Минимум 6 символов"
-                value={pwForm.newPassword} onChange={setPw('newPassword')}
-                error={pwErrors.newPassword} icon={<Lock size={16} />} />
-              <Input label="Повторите пароль" type="password"
-                placeholder="Ещё раз"
-                value={pwForm.confirm} onChange={setPw('confirm')}
-                error={pwErrors.confirm} icon={<Lock size={16} />} />
-            </div>
-            <Button type="submit" variant="secondary" icon={<Lock size={15} />} loading={pwLoading}>
-              Сменить пароль
-            </Button>
-          </form>
-        </Card>
-      </motion.div>
-
-      <motion.div variants={FADE}>
-        <Card style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          padding: '18px 20px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 'var(--radius-s)',
-              background: 'var(--green-dim)', color: 'var(--green)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Globe size={17} />
-            </div>
-            <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>О приложении</p>
-          </div>
-          {[
-            { label: 'Версия', value: '1.0.0' },
-            { label: 'Стек', value: 'React · Node.js · MongoDB' },
-            { label: 'ИИ-модель', value: 'Nex N2 Pro (OpenRouter)' },
-            { label: 'Хостинг', value: 'Vercel (frontend) · Render (backend)' },
-          ].map((r) => (
-            <div key={r.label} style={{
-              display: 'flex', justifyContent: 'space-between',
-              padding: '8px 0', borderTop: '1px solid var(--border)',
-              fontSize: '0.82rem',
-            }}>
-              <span style={{ color: 'var(--text-3)' }}>{r.label}</span>
-              <span style={{ color: 'var(--text-2)', fontWeight: 500 }}>{r.value}</span>
-            </div>
-          ))}
-        </Card>
-      </motion.div>
-      <motion.div variants={FADE}>
-        <Card style={{ padding: '18px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-               width: 36, height: 36, borderRadius: 'var(--radius-s)',
-               background: pushEnabled ? 'var(--green-dim)' : 'var(--surface-2)',
-               color: pushEnabled ? 'var(--green)' : 'var(--text-3)',
-               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-               {pushEnabled ? <Bell size={17} /> : <BellOff size={17} />}
-              </div>
-             <div>
-             <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>Push-уведомления</p>
-             <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: 2 }}>
-            {pushEnabled ? 'Включены' : 'Выключены'} · платежи, чат, ИИ, статистика
-             </p>
-           </div>
-          </div>
-          <button onClick={handlePushToggle} style={{
-           width: 44, height: 24, borderRadius: 99, cursor: 'pointer', border: 'none',
-           background: pushEnabled ? 'var(--green)' : 'var(--surface-2)',
-           position: 'relative', transition: 'var(--transition)',
-          }}>
-          <motion.div animate={{ x: pushEnabled ? 20 : 2 }}
-            style={{
-              width: 20, height: 20, borderRadius: '50%',
-              background: '#fff', position: 'absolute', top: 2,
-              boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            }}/>
-          </button>
-            </div>
-          </Card>
-         </motion.div>
-        </motion.div>
+      <Section title="Сессия">
+        <div style={{ padding: '0 var(--pad)' }}>
+          <Button variant="danger" size="md" icon={<LogOut size={15} />} onClick={logout}>Выйти из аккаунта</Button>
+        </div>
+      </Section>
+    </Page>
   );
 }

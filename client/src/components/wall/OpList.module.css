@@ -29,4 +29,7 @@
 }
 .sum[data-kind='income'] { color: var(--ok); }
 
-@media (min-width: 860px) { .list, .empty { padding-left: 0; padding-right: 0; } }
+@media (min-width: 860px) {
+  .list, .empty { padding-left: 0; padding-right: 0; }
+  .list { max-width: 680px; }
+}

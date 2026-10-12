@@ -51,7 +51,10 @@ export function formatMoney(
     minimumFractionDigits: cents ? 2 : 0,
     maximumFractionDigits: cents ? 2 : 0,
   }).format(value / 100);
-  return sign && value > 0 ? `+${formatted}` : formatted;
+  if (!sign) return formatted;
+  if (value > 0) return `+${formatted}`;
+  if (value < 0) return formatted.replace('-', '\u2212');
+  return formatted;
 }
 
 export function formatAmount(value: Minor, opts: { cents?: boolean } = {}): string {

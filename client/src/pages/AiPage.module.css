@@ -1,0 +1,48 @@
+.quick { display: flex; gap: 7px; overflow-x: auto; padding: 0 var(--pad) 16px; scrollbar-width: none; }
+.quick::-webkit-scrollbar { display: none; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;
+  height: 34px; padding: 0 12px; border-radius: var(--r-chip);
+  background: var(--wall-2); border: 1px solid var(--hairline-2);
+  color: var(--bone-2); font-size: 12.5px; font-weight: 700;
+}
+.chip:hover:not(:disabled) { color: var(--bone); border-color: var(--bone-4); }
+.chip:disabled { opacity: 0.5; }
+
+.log { display: flex; flex-direction: column; gap: 14px; padding: 0 var(--pad) 18px; }
+.intro { color: var(--bone-3); font-size: var(--t-meta); line-height: 1.6; max-width: 46ch; }
+
+.turn { max-width: 88%; padding: 12px 14px; border-radius: var(--r-tile); }
+.turn[data-role='me'] { align-self: flex-end; background: var(--bone); color: var(--on-bone); }
+.turn[data-role='ai'] { align-self: flex-start; background: var(--wall-2); border: 1px solid var(--hairline); }
+.text { font-size: var(--t-body); line-height: 1.6; white-space: pre-wrap; }
+.basis {
+  font-family: var(--font-num); font-size: 10px; color: var(--bone-4);
+  margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline);
+}
+
+.dots { display: inline-flex; gap: 4px; }
+.dots i {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--bone-4);
+  animation: bob 0.9s var(--ease) infinite;
+}
+.dots i:nth-child(2) { animation-delay: 0.15s; }
+.dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+.compose { display: flex; gap: 8px; padding: 0 var(--pad); }
+.input {
+  flex: 1; height: 46px; padding: 0 14px;
+  background: var(--wall-2); border: 1px solid var(--hairline-2);
+  border-radius: var(--r-tile); color: var(--bone); font-size: var(--t-body);
+}
+.input:focus { outline: none; border-color: var(--bone); }
+.send {
+  width: 46px; height: 46px; flex: 0 0 auto; border-radius: var(--r-tile);
+  background: var(--bone); color: var(--on-bone); display: grid; place-items: center;
+}
+.send:disabled { background: var(--wall-3); color: var(--bone-4); }
+
+@media (min-width: 860px) {
+  .quick, .log, .compose { padding-left: 0; padding-right: 0; }
+}
