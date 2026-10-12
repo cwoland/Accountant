@@ -9,7 +9,7 @@ import {
 import { z } from 'zod';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { 
+import {
     createTransaction,
     deleteTransaction,
     getStats,

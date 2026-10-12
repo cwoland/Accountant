@@ -13,11 +13,6 @@ interface SheetProps {
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-/**
- * Лист снизу на телефоне, карточка по центру на десктопе.
- * Заменяет старый Modal: там Escape вызывал несуществующий onclose(),
- * а cleanup эффекта ДОБАВЛЯЛ слушатель вместо снятия.
- */
 export default function Sheet({ open, onClose, title, children }: SheetProps) {
   const panel = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);

@@ -9,6 +9,7 @@ import { subscribeToPush, unsubscribeFromPush } from '../utils/push';
 import { useAuthStore } from '../store/authStore';
 import Page, { Section } from '../components/shell/Page';
 import Button from '../components/ui/Button';
+import LangSwitch from '@/components/ui/LangSwitch';
 import { Field, SelectField } from '../components/ui/Field';
 
 const CURRENCY_NAMES: Record<Currency, string> = {
@@ -101,6 +102,8 @@ export default function ProfilePage() {
 
           <Button type="submit" variant="bone" size="md" loading={saveProfile.isPending}>Сохранить</Button>
         </form>
+
+        <LangSwitch />
       </Section>
 
       <Section title="Уведомления">

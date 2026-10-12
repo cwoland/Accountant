@@ -17,7 +17,6 @@
 }
 .type[aria-checked='true'] { background: var(--bone); color: var(--on-bone); border-color: var(--bone); }
 
-/* Сумма — главное поле листа, набирается крупно и моноширинно. */
 .amount { font-family: var(--font-num); font-size: 26px; font-weight: 700; height: 60px; }
 
 .descWrap { position: relative; }
@@ -45,7 +44,7 @@
 }
 .cat {
   display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
-  /* 44pt по высоте и больше — основной сценарий это палец одной руки. */
+
   min-height: 72px; padding: 10px;
   border-radius: var(--r-tile);
   background: color-mix(in srgb, var(--ink) 15%, var(--wall-2));

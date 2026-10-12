@@ -10,7 +10,8 @@ const LINKS: NavItem[] = [
     { to: '/goals', label: 'Цели' },
     { to: '/debts', label: 'Долги' },
     { to: '/ai', label: 'Советник' },
-    { to: '/profile', label: 'Профиль' },
+    { to: '/limits', label: 'Лимиты' },
+  { to: '/profile', label: 'Профиль' },
 ] as const;
 
 export default function SideNav() {

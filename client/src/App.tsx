@@ -2,16 +2,16 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import AppShell from './components/shell/AppShell';
 import CaptureSheet from './components/capture/CaptureSheet';
+import TransferSheet from './components/capture/TransferSheet';
 import ErrorBoundary from './components/ErrorBoundary';
 import ServerWakeBanner from './components/ui/ServerWakeBanner';
 import InstallBanner from './components/ui/InstallBanner';
 import WallSkeleton from './components/wall/WallSkeleton';
 import { useAuthStore } from './store/authStore';
+import { useUiStore } from './store/uiStore';
 import { useSyncQueue } from './hooks/useSyncQueue';
 import { usePushListener } from './hooks/usePushListener';
 
-// Код делится по маршрутам: recharts и framer-motion больше не едут
-// в первый бандл. Главный сценарий — телефон в метро.
 const WallPage         = lazy(() => import('./pages/WallPage'));
 const TransactionsPage = lazy(() => import('./pages/TransactionsPage'));
 const MandatoryPage    = lazy(() => import('./pages/MandatoryPage'));
@@ -24,9 +24,17 @@ const LoginPage        = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage     = lazy(() => import('./pages/auth/RegisterPage'));
 const OnboardingPage   = lazy(() => import('./pages/OnboardingPage'));
 const NotFoundPage     = lazy(() => import('./pages/NotFoundPage'));
+const CategoryBudgetsPage = lazy(() => import('./pages/CategoryBudgetsPage'));
+const ResetPasswordPage   = lazy(() => import('./pages/ResetPasswordPage'));
+
+function TransferSheetHost() {
+  const mode = useUiStore((s) => s.capture);
+  const close = useUiStore((s) => s.closeCapture);
+  return <TransferSheet open={mode === 'transfer'} onClose={close} />;
+}
 
 function Background() {
-  // Хуки, которым нужен роутер и которые ничего не рисуют.
+
   useSyncQueue();
   usePushListener();
   return null;
@@ -41,8 +49,7 @@ function RequireAuth() {
     const next = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/login?next=${next}`} replace />;
   }
-  // Онбординг — отдельный маршрут, а не модалка поверх приложения:
-  // так он переживает перезагрузку и имеет собственный адрес.
+
   if (user && !user.onboardingCompleted) return <Navigate to="/welcome" replace />;
 
   return <Outlet />;
@@ -66,6 +73,7 @@ export default function App() {
             <Route element={<RequireGuest />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/reset" element={<ResetPasswordPage />} />
             </Route>
 
             <Route element={<RequireAuth />}>
@@ -78,17 +86,17 @@ export default function App() {
                 <Route path="accounts" element={<AccountsPage />} />
                 <Route path="ai" element={<AiPage />} />
                 <Route path="profile" element={<ProfilePage />} />
+                <Route path="limits" element={<CategoryBudgetsPage />} />
               </Route>
             </Route>
 
-            {/* Онбординг без оболочки: своя раскладка на весь экран. */}
             <Route path="/welcome" element={<OnboardingPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
 
-        {/* Лист записи доступен с любого экрана приложения. */}
         <CaptureSheet />
+        <TransferSheetHost />
       </ErrorBoundary>
     </BrowserRouter>
   );

@@ -26,4 +26,4 @@ export default function Row({ title, count, allHref, children }: RowProps) {
       {children}
     </section>
   );
-}
+}undefined

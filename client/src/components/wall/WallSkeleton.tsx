@@ -1,10 +1,5 @@
 import styles from './WallSkeleton.module.css';
 
-/**
- * Каркас повторяет форму стены, а не крутит спиннер: на холодном старте
- * Render это 20–30 секунд, и за это время пользователь должен понимать,
- * ЧТО грузится, а не смотреть на вращающийся круг.
- */
 export default function WallSkeleton() {
   return (
     <div className={styles.wrap} aria-busy="true" aria-live="polite">

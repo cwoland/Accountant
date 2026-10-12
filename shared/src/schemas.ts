@@ -15,7 +15,6 @@ export const amountMinor = z
 export const isoDate = z.string().datetime({ offset: true }).or(z.coerce.date());
 
 export const transactionType = z.enum(['income', 'expense']);
-/** Имя иконки из закрытого реестра — вместо произвольной строки с эмодзи. */
 export const iconName = z.enum(ICON_NAMES);
 export const recurringPeriod = z.enum(['daily', 'weekly', 'monthly', 'yearly']);
 export const currency = z.enum(CURRENCIES);
@@ -84,6 +83,17 @@ export const createTransactionBody = z.object({
   tags: z.array(z.string().trim().min(1).max(24)).max(10).default([]),
 });
 
+export const createTransferBody = z.object({
+  fromAccountId: objectId.nullable(),
+  toAccountId: objectId.nullable(),
+  amount: amountMinor,
+  date: z.coerce.date().default(() => new Date()),
+  note: z.string().trim().max(200).default(''),
+}).refine((v) => v.fromAccountId !== v.toAccountId, {
+  message: 'Счета перевода должны различаться',
+  path: ['toAccountId'],
+});
+
 export const updateTransactionBody = createTransactionBody
   .omit({ accountId: true })
   .partial();
@@ -139,7 +149,6 @@ export const createGoalBody = z.object({
   note: z.string().trim().max(500).optional(),
 });
 
-
 export const aiAskBody = z.object({
   question: z.string().trim().min(3).max(500).optional(),
   startDate: z.coerce.date().optional(),
@@ -174,3 +183,44 @@ export const updateCategoryBody = createCategoryBody.partial();
 export const createGoalBodyV2 = createGoalBody
   .omit({ color: true })
   .extend({ ink: z.number().int().min(0).max(11).default(4) });
+
+export const categoryBudgetQuery = budgetQuery;
+
+export const setCategoryBudgetsBody = z.object({
+  year: z.number().int().min(2000).max(2100),
+  month: z.number().int().min(1).max(12),
+  items: z.array(z.object({
+    category: objectId,
+    amount: z.number().int().min(0).max(1_000_000_000_00),
+  })).max(100),
+});
+export const splitBody = z.object({
+  shares: z
+    .array(
+      z.object({
+        user: objectId,
+        share: z.number().int().min(0),
+      }),
+    )
+    .min(1)
+    .max(20),
+});
+
+export const exportQuery = z.object({
+  accountId: objectId.optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  delimiter: z.enum([';', ',']).default(';'),
+});
+
+export const requestResetBody = z.object({
+  email: z.string().trim().toLowerCase().email('Некорректный email'),
+});
+
+export const confirmResetBody = z.object({
+  token: z.string().min(32).max(128),
+  password: passwordSchema,
+});
+
+export type SplitBody = z.infer<typeof splitBody>;
+export type ExportQuery = z.infer<typeof exportQuery>;

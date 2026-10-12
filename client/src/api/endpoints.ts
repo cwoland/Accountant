@@ -1,17 +1,10 @@
 import type {
+  CategoryBudgetDto, SettlementDto, TransferDto,
   AccountDto, AiAnswerDto, AuthDto, BudgetDto, CategoryDto, DebtDto, GoalDto,
   IconName, MessagePage, Minor, Paginated, PendingItemDto, StatsDto,
   TransactionDto, UserDto,
 } from '@accountant/shared';
 import { api } from './client';
-
-/*
-  Весь контракт с сервером в одном файле и с типами из @accountant/shared.
-  Раньше это были девять файлов без единого типа, с расхождениями вроде
-  ?q против ?query и stats против summary — их ловили только в проде.
-*/
-
-/* ── auth ─────────────────────────────────────────────────────── */
 
 export const loginApi = (body: { email: string; password: string }) =>
   api.post<AuthDto>('/auth/login', body);
@@ -33,11 +26,8 @@ export const changePasswordApi = (body: { currentPassword: string; newPassword: 
 
 export const completeOnboardingApi = () => api.post<UserDto>('/auth/onboarding-complete');
 
-/** Email наружу сервер не отдаёт — приглашаем по тому, что ввёл пользователь. */
 export const searchUsersApi = (q: string) =>
   api.get<Pick<UserDto, '_id' | 'name' | 'avatar'>[]>('/auth/search', { params: { q } });
-
-/* ── transactions ─────────────────────────────────────────────── */
 
 export interface TxQuery {
   accountId?: string | undefined;
@@ -64,7 +54,7 @@ export const getStatsApi = (params: {
 export interface TxBody {
   accountId?: string | null;
   type: 'income' | 'expense';
-  /** Копейки, целое. */
+
   amount: number;
   category: string;
   description?: string;
@@ -80,10 +70,7 @@ export const createTransactionApi = (body: TxBody) =>
 export const updateTransactionApi = (id: string, body: Partial<TxBody>) =>
   api.put<TransactionDto>(`/transactions/${id}`, body);
 
-/** 204 без тела — сервер больше не возвращает { message }. */
 export const deleteTransactionApi = (id: string) => api.delete<void>(`/transactions/${id}`);
-
-/* ── categories ───────────────────────────────────────────────── */
 
 export const getCategoriesApi = () => api.get<CategoryDto[]>('/categories');
 
@@ -101,15 +88,11 @@ export const archiveCategoryApi = (id: string) =>
 export const hideCategoryApi = (id: string) => api.post<void>(`/categories/${id}/hide`);
 export const unhideCategoryApi = (id: string) => api.post<void>(`/categories/${id}/unhide`);
 
-/* ── budget ───────────────────────────────────────────────────── */
-
 export const getBudgetApi = (params: { year: number; month: number }) =>
   api.get<BudgetDto>('/budget', { params });
 
 export const setBudgetApi = (body: { year: number; month: number; amount: number }) =>
   api.post<BudgetDto>('/budget', body);
-
-/* ── accounts ─────────────────────────────────────────────────── */
 
 export const getAccountsApi = () => api.get<AccountDto[]>('/accounts');
 export const getInvitesApi = () => api.get<AccountDto[]>('/accounts/invites');
@@ -120,9 +103,9 @@ export const createAccountApi = (body: {
 
 export const acceptInviteApi = (id: string) => api.post<AccountDto>(`/accounts/${id}/accept`);
 export const declineInviteApi = (id: string) => api.post<void>(`/accounts/${id}/decline`);
-/** Стал POST: раньше был DELETE, что не отражало смысла. */
+
 export const leaveAccountApi = (id: string) => api.post<void>(`/accounts/${id}/leave`);
-/** Архив, а не удаление: транзакции сохраняют связь со счётом. */
+
 export const archiveAccountApi = (id: string) => api.post<void>(`/accounts/${id}/archive`);
 export const purgeAccountApi = (id: string) =>
   api.delete<{ deletedTransactions: number; deletedMessages: number }>(`/accounts/${id}`);
@@ -135,15 +118,11 @@ export const getAccountStatsApi = (id: string) =>
     byUser: { userId: string; name: string; avatar: string; expense: Minor; income: Minor; count: number }[];
   }>(`/accounts/${id}/stats`);
 
-/* ── messages ─────────────────────────────────────────────────── */
-
 export const getMessagesApi = (accountId: string, params: { before?: string; limit?: number } = {}) =>
   api.get<MessagePage>(`/messages/${accountId}`, { params });
 
 export const sendMessageApi = (accountId: string, text: string) =>
   api.post<MessagePage['items'][number]>(`/messages/${accountId}`, { text });
-
-/* ── debts & goals ────────────────────────────────────────────── */
 
 export const getDebtsApi = () => api.get<DebtDto[]>('/debts');
 export const createDebtApi = (body: {
@@ -163,17 +142,13 @@ export const contributeGoalApi = (id: string, body: { amount: number; note?: str
   api.post<GoalDto>(`/goals/${id}/contribute`, body);
 export const deleteGoalApi = (id: string) => api.delete<void>(`/goals/${id}`);
 
-/* ── pending & ai & push ──────────────────────────────────────── */
-
 export const getPendingRawApi = (params: { accountId?: string | undefined }) =>
   api.get<PendingItemDto[]>('/pending', { params });
 
-/** Одна ручка вместо трёх: сервер сам считает агрегаты. */
 export const askAiApi = (body: {
   question?: string; startDate?: string; endDate?: string; accountId?: string;
 }) => api.post<AiAnswerDto>('/ai/ask', body);
 
-/** Возвращает id, а не имя — искать категорию по строке больше не нужно. */
 export const categorizeApi = (description: string) =>
   api.post<{ categoryId: string | null; name: string | null }>('/ai/categorize', { description });
 
@@ -182,3 +157,38 @@ export const subscribePushApi = (subscription: PushSubscriptionJSON) =>
   api.post<void>('/push/subscribe', { subscription });
 export const unsubscribePushApi = (endpoint?: string) =>
   api.delete<void>('/push/subscribe', { data: { endpoint } });
+
+export const createTransferApi = (body: {
+  fromAccountId: string | null;
+  toAccountId: string | null;
+  amount: number;
+  date?: string;
+  note?: string;
+}) => api.post<TransferDto>('/transfers', body);
+
+export const deleteTransferApi = (transferId: string) =>
+  api.delete<void>(`/transfers/${transferId}`);
+
+export const getCategoryBudgetsApi = (params: { year: number; month: number }) =>
+  api.get<CategoryBudgetDto[]>('/category-budgets', { params });
+
+export const setCategoryBudgetsApi = (body: {
+  year: number;
+  month: number;
+  items: { category: string; amount: number }[];
+}) => api.post<void>('/category-budgets', body);
+
+export const setSplitApi = (transactionId: string, shares: { user: string; share: number }[]) =>
+  api.put<void>(`/split/transaction/${transactionId}`, { shares });
+
+export const clearSplitApi = (transactionId: string) =>
+  api.delete<void>(`/split/transaction/${transactionId}`);
+
+export const getSettlementApi = (accountId: string) =>
+  api.get<SettlementDto>(`/split/account/${accountId}`);
+
+export const forgotPasswordApi = (email: string) =>
+  api.post<{ ok: true; devToken?: string }>('/auth/password/forgot', { email });
+
+export const resetPasswordApi = (body: { token: string; password: string }) =>
+  api.post<void>('/auth/password/reset', body);

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import {
   changePasswordBody,
+  confirmResetBody,
+  requestResetBody,
   loginBody,
   registerBody,
   searchQuery,
@@ -17,11 +19,14 @@ import {
   searchUsers,
   updateProfile,
 } from '../controllers/authController.js';
+import { confirmReset, requestReset } from '../controllers/passwordResetController.js';
 
 const router = Router();
 
 router.post('/register', validate('body', registerBody), register);
 router.post('/login', validate('body', loginBody), login);
+router.post('/password/forgot', validate('body', requestResetBody), requestReset);
+router.post('/password/reset', validate('body', confirmResetBody), confirmReset);
 
 router.get('/search', protect, validate('query', searchQuery), searchUsers);
 

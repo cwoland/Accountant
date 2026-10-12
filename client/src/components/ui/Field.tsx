@@ -5,7 +5,7 @@ interface Base {
   label: string;
   error?: string | undefined;
   hint?: string;
-  /** Приписка в правом краю поля: символ валюты, единица. */
+
   suffix?: ReactNode;
 }
 
@@ -28,7 +28,6 @@ export function Field({ label, error, hint, suffix, className, ...rest }: InputP
         />
         {suffix && <span className={styles.suffix}>{suffix}</span>}
       </div>
-      {/* Ошибка объявляется вслух: раньше она была просто красным текстом. */}
       {error && <p className={styles.err} id={`${id}-err`} role="alert">{error}</p>}
       {hint && !error && <p className={styles.hint} id={`${id}-hint`}>{hint}</p>}
     </div>

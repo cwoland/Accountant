@@ -23,6 +23,11 @@ import goalRoutes from './routes/goals.js';
 import pushRoutes from './routes/push.js';
 import budgetRoutes from './routes/budget.js';
 import pendingRoutes from './routes/pending.js';
+import cronRoutes from './routes/cron.js';
+import transferRoutes from './routes/transfers.js';
+import categoryBudgetRoutes from './routes/categoryBudgets.js';
+import splitRoutes from './routes/split.js';
+import exportRoutes from './routes/export.js';
 
 const app = express();
 
@@ -50,8 +55,6 @@ const corsOptions: CorsOptions = {
     const normalized = origin.replace(/\/$/, '');
     if (env.CLIENT_URL.includes(normalized)) return callback(null, true);
     logger.warn({ origin }, 'CORS: источник отклонён');
-    // Именно HttpError, а не голый Error: иначе обработчик ошибок считает
-    // это внутренним сбоем и отвечает 500 с ref в логе, хотя отказ штатный.
     callback(forbidden('Источник не разрешён политикой CORS'));
   },
   credentials: true,
@@ -95,6 +98,7 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/auth/password', authLimiter);
 app.use('/api/auth', authRoutes);
+app.use('/api/cron', cronRoutes);
 app.use('/api/push', pushRoutes);
 
 app.use('/api/ai', protect, aiLimiter, aiRoutes);
@@ -106,6 +110,10 @@ app.use('/api/debts', protect, apiLimiter, debtRoutes);
 app.use('/api/goals', protect, apiLimiter, goalRoutes);
 app.use('/api/budget', protect, apiLimiter, budgetRoutes);
 app.use('/api/pending', protect, apiLimiter, pendingRoutes);
+app.use('/api/transfers', protect, apiLimiter, transferRoutes);
+app.use('/api/category-budgets', protect, apiLimiter, categoryBudgetRoutes);
+app.use('/api/split', protect, apiLimiter, splitRoutes);
+app.use('/api/export', protect, apiLimiter, exportRoutes);
 
 app.use('/api', notFoundHandler);
 app.use(errorHandler);

@@ -20,7 +20,7 @@
     display: flex; gap: 6px; justify-content: flex-end;
     margin-top: 6px;
   }
-  
+
   .nav[data-idle='true'] { display: none; }
   .nav button {
     width: 26px; height: 26px; border-radius: var(--r-chip);

@@ -1,3 +1,4 @@
+import './i18n';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,10 +9,6 @@ import App from './App';
 import './styles/tokens.css';
 import './styles/base.css';
 
-/*
-  registerType: 'prompt' в vite.config — приложение больше не обновляется
-  под пользователем посреди заполнения формы. Спрашиваем явно.
-*/
 const updateSW = registerSW({
   onNeedRefresh() {
     toast(
@@ -38,8 +35,7 @@ const queryClient = new QueryClient({
       retry: 1,
       staleTime: 30_000,
       refetchOnWindowFocus: false,
-      // Холодный старт Render — до 30 секунд. Без этого react-query
-      // успевает отменить запрос раньше, чем сервер проснётся.
+
       networkMode: 'offlineFirst',
     },
   },

@@ -17,11 +17,6 @@ import styles from './CaptureSheet.module.css';
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
-/**
- * Самый частый жест в продукте. Правила, которым подчинён экран:
- * сумма в фокусе сразу, категория выбирается одним тапом по сетке
- * (а не из выпадающего списка), и форма работает офлайн без оговорок.
- */
 export default function CaptureSheet() {
   const mode = useUiStore((s) => s.capture);
   const close = useUiStore((s) => s.closeCapture);
@@ -79,8 +74,7 @@ export default function CaptureSheet() {
     }
     setAiBusy(true);
     try {
-      // Сервер возвращает id категории, а не её имя: раньше клиент искал
-      // категорию по строке ответа модели и промахивался на любом отклонении.
+
       const { data } = await categorizeApi(description.trim());
       if (data.categoryId) {
         setCategoryId(data.categoryId);
@@ -116,8 +110,7 @@ export default function CaptureSheet() {
     };
 
     if (!online) {
-      // В очередь уходит И accountId: раньше его добавляли только в онлайн-ветке,
-      // и запись, сделанная офлайн по семейному счёту, приземлялась в личный.
+
       await enqueue(body);
       await qc.invalidateQueries({ queryKey: ['pending'] });
       toast('Сохранено офлайн — отправим, когда появится сеть');
@@ -179,8 +172,6 @@ export default function CaptureSheet() {
           </button>
         </div>
 
-        {/* Категория — сетка в один тап, а не выпадающий список: в списке
-            из 24 пунктов выбор на телефоне стоит трёх взаимодействий. */}
         <fieldset className={styles.cats}>
           <legend className={styles.legend}>Категория</legend>
           <div className={styles.grid}>

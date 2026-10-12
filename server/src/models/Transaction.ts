@@ -11,7 +11,12 @@ export interface ITransaction {
   date: Date;
   isRecurring: boolean;
   recurringPeriod: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
+  recurringParent: Types.ObjectId | null;
   nextRunAt: Date | null;
+  recurringAnchorDay: number | null;
+  recurringStoppedAt: Date | null;
+  transfer: Types.ObjectId | null;
+  split: { user: Types.ObjectId; share: number }[];
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
@@ -40,7 +45,24 @@ const transactionSchema = new Schema<ITransaction>(
       enum: ['daily', 'weekly', 'monthly', 'yearly', null],
       default: null,
     },
+    recurringParent: { type: Schema.Types.ObjectId, ref: 'Transaction', default: null },
     nextRunAt: { type: Date, default: null },
+    recurringAnchorDay: { type: Number, default: null, min: 1, max: 31 },
+    recurringStoppedAt: { type: Date, default: null },
+    transfer: { type: Schema.Types.ObjectId, default: null },
+    split: {
+      type: [{
+        user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        share: {
+          type: Number,
+          required: true,
+          min: 0,
+          validate: { validator: Number.isInteger, message: 'Доля — целое число копеек' },
+        },
+        _id: false,
+      }],
+      default: [],
+    },
     tags: { type: [String], default: [] },
   },
   { timestamps: true },
@@ -51,5 +73,8 @@ transactionSchema.index({ account: 1, date: -1 });
 transactionSchema.index({ user: 1, category: 1, date: -1 });
 transactionSchema.index({ description: 'text' });
 transactionSchema.index({ nextRunAt: 1 }, { sparse: true });
+transactionSchema.index({ nextRunAt: 1 }, { sparse: true });
+transactionSchema.index({ recurringParent: 1 }, { sparse: true });
+transactionSchema.index({ transfer: 1 }, { sparse: true });
 
 export const Transaction = model<ITransaction>('Transaction', transactionSchema);

@@ -30,8 +30,6 @@ export function usePushListener(): void {
         return;
       }
 
-      // Клик по системному уведомлению: раньше SW делал client.navigate(),
-      // что перезагружало SPA целиком. Теперь роутер переходит без перезагрузки.
       if (data.type === 'NAVIGATE' && data.url) navigate(data.url);
     };
 

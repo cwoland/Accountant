@@ -26,7 +26,7 @@ export async function computeStats(
   scope: StatsScope,
   range: Partial<Range> = {},
 ): Promise<StatsDto> {
-  const match: Record<string, unknown> = { ...scope };
+  const match: Record<string, unknown> = { ...scope, transfer: null };
   if (range.start || range.end) {
     match.date = {
       ...(range.start ? { $gte: range.start } : {}),

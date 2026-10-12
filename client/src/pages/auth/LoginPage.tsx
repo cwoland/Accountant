@@ -45,7 +45,13 @@ export default function LoginPage() {
   return (
     <AuthLayout
       title="Вход"
-      footer={<>Нет аккаунта? <Link to="/register">Зарегистрироваться</Link></>}
+      footer={
+        <>
+          Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+          {' · '}
+          <Link to="/reset">Забыли пароль?</Link>
+        </>
+      }
     >
       {expired && <p role="status" style={{ color: 'var(--warn)', fontSize: 'var(--t-meta)' }}>
         Сессия истекла — войдите снова.

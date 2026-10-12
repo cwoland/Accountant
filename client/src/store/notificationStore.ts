@@ -5,7 +5,7 @@ export interface AppNotification {
   id: string;
   title: string;
   body: string;
-  /** Имя иконки из реестра — вместо эмодзи 🔔, которое было здесь раньше. */
+
   icon: IconName;
   url: string;
   createdAt: string;

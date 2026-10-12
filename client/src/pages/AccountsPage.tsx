@@ -8,6 +8,7 @@ import {
   getAccountsApi, getInvitesApi, leaveAccountApi, searchUsersApi,
 } from '../api/endpoints';
 import { errorFields, errorMessage } from '../api/client';
+import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
 import { useDebounced } from '../hooks/useDebounced';
 import Page, { Section } from '../components/shell/Page';
@@ -16,9 +17,11 @@ import Sheet from '../components/ui/Sheet';
 import { Field } from '../components/ui/Field';
 import EmptyPlate from '../components/ui/EmptyPlate';
 import AccountChat from '../components/AccountChat';
+import SettlementCard from '../components/SettlementCard';
 import styles from './AccountsPage.module.css';
 
 export default function AccountsPage() {
+  const currency = useAuthStore((s) => s.user?.currency ?? 'RUB');
   const activeId = useUiStore((s) => s.activeAccountId);
   const setActive = useUiStore((s) => s.setActiveAccount);
   const qc = useQueryClient();
@@ -155,6 +158,12 @@ export default function AccountsPage() {
       )}
 
       {activeAccount && (
+        <Section title="Кто кому должен">
+          <SettlementCard account={activeAccount} currency={currency} />
+        </Section>
+      )}
+
+      {activeAccount && (
         <Section title="Обсуждение">
           <AccountChat accountId={activeAccount._id} accountName={activeAccount.name} />
         </Section>
@@ -216,4 +225,4 @@ export default function AccountsPage() {
       </Sheet>
     </Page>
   );
-}
+}undefined

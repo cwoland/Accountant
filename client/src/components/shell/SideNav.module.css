@@ -20,8 +20,8 @@
         font-size: var(--t-body);
         font-weight: 600;
         color: var(--bone-3);
-        transition: 
-            color var(--dur) var(--ease), 
+        transition:
+            color var(--dur) var(--ease),
             background var(--dur) var(--ease);
     }
 

@@ -58,4 +58,4 @@ export default function RegisterPage() {
       </form>
     </AuthLayout>
   );
-}
+}undefined

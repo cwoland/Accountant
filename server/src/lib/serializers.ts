@@ -1,5 +1,5 @@
 import type { HydratedDocument, Types } from 'mongoose';
-import { toIconName } from '@accountant/shared';
+import { asMinor, toIconName } from '@accountant/shared';
 import type {
   CategoryDto,
   TransactionDto,
@@ -57,6 +57,8 @@ export function toTransactionDto(t: PopulatedTx): TransactionDto {
     isRecurring: t.isRecurring,
     recurringPeriod: t.recurringPeriod,
     tags: t.tags,
+    transfer: t.transfer ? id(t.transfer) : null,
+    split: (t.split ?? []).map((s) => ({ user: id(s.user), share: asMinor(s.share) })),
     createdAt: t.createdAt.toISOString(),
   };
 }

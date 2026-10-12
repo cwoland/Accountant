@@ -14,8 +14,6 @@
 .btn[data-size='md'] { height: 42px; padding: 0 18px; font-size: 14px; }
 .btn[data-size='lg'] { height: 48px; padding: 0 22px; font-size: 14.5px; }
 
-/* Весь хроматический вес отдан постерам, поэтому первичное действие —
-   самый светлый объект на экране, а не самый цветной. */
 .btn[data-variant='bone']  { background: var(--bone); color: var(--on-bone); }
 .btn[data-variant='quiet'] { background: var(--wall-2); color: var(--bone-2); border: 1px solid var(--hairline-2); }
 .btn[data-variant='quiet']:hover:not(:disabled) { color: var(--bone); border-color: var(--bone-4); }

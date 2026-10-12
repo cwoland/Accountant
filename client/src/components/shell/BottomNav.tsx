@@ -18,6 +18,7 @@ const SECONDARY = [
   { to: '/goals', label: 'Цели' },
   { to: '/debts', label: 'Долги' },
   { to: '/mandatory', label: 'Обязательные' },
+  { to: '/limits', label: 'Лимиты' },
   { to: '/accounts', label: 'Счета' },
   { to: '/ai', label: 'Советник' },
   { to: '/profile', label: 'Профиль' },

@@ -1,15 +1,17 @@
-// client/src/pages/TransactionsPage.tsx
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Receipt, Search, Trash2 } from 'lucide-react';
+import { ArrowLeftRight, ChevronLeft, ChevronRight, Download, Receipt, Search, Split, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { formatMoney } from '@accountant/shared';
+import { formatMoney, type TransactionDto } from '@accountant/shared';
 import { deleteTransactionApi, getTransactionsApi, type TxQuery } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
 import { useCategories } from '../hooks/useCategories';
+import { downloadTransactionsCsv } from '../lib/download';
+import { getAccountsApi } from '../api/endpoints';
+import SplitSheet from '../components/SplitSheet';
 import { useDebounced } from '../hooks/useDebounced';
 import { formatDay } from '../lib/format';
 import { inkStyle } from '../lib/ink';
@@ -28,14 +30,13 @@ export default function TransactionsPage() {
   const { all: categories } = useCategories();
   const qc = useQueryClient();
 
+  const [splitTarget, setSplitTarget] = useState<TransactionDto | null>(null);
   const [search, setSearch] = useState(() => params.get('q') ?? '');
   const debounced = useDebounced(search, 350);
   const page = Number(params.get('page') ?? 1);
   const type = params.get('type') ?? '';
   const category = params.get('category') ?? '';
 
-  // Фильтры живут в URL: ссылку на «рестораны за октябрь» можно
-  // переслать или сохранить. Раньше состояние было локальным.
   const patch = (next: Record<string, string>) => {
     setParams((prev) => {
       const p = new URLSearchParams(prev);
@@ -62,6 +63,14 @@ export default function TransactionsPage() {
     placeholderData: keepPreviousData,
   });
 
+  const accounts = useQuery({
+    queryKey: ['accounts'],
+    queryFn: () => getAccountsApi().then((r) => r.data),
+    enabled: Boolean(accountId),
+  });
+
+  const activeAccount = (accounts.data ?? []).find((a) => a._id === accountId) ?? null;
+
   const remove = useMutation({
     mutationFn: (id: string) => deleteTransactionApi(id),
     onSuccess: () => {
@@ -79,10 +88,32 @@ export default function TransactionsPage() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <h1 className={styles.title}>Операции</h1>
-        <p className={styles.count}>
-          {data ? `${data.total} всего` : '—'}
-        </p>
+        <div className={styles.headText}>
+          <h1 className={styles.title}>Операции</h1>
+          <p className={styles.count}>{data ? `${data.total} всего` : '—'}</p>
+        </div>
+        <div className={styles.headActions}>
+          <Button
+            size="sm"
+            variant="quiet"
+            icon={<ArrowLeftRight size={14} />}
+            onClick={() => openCapture('transfer')}
+          >
+            Перевод
+          </Button>
+          <Button
+            size="sm"
+            variant="quiet"
+            icon={<Download size={14} />}
+            onClick={() => {
+              void downloadTransactionsCsv({
+                accountId: accountId ?? undefined,
+              }).catch(() => toast.error('Не удалось выгрузить'));
+            }}
+          >
+            CSV
+          </Button>
+        </div>
       </header>
 
       <div className={styles.filters}>
@@ -156,6 +187,17 @@ export default function TransactionsPage() {
               <span className={styles.sum} data-kind={t.type}>
                 {t.type === 'income' ? '+' : '−'}{formatMoney(t.amount, currency)}
               </span>
+              {accountId && (
+                <button
+                  type="button"
+                  className={styles.split}
+                  aria-label={`Разделить операцию «${t.description || t.category?.name || ''}»`}
+                  onClick={() => setSplitTarget(t)}
+                  data-active={t.split.length > 0 || undefined}
+                >
+                  <Split size={14} aria-hidden />
+                </button>
+              )}
               <button
                 type="button"
                 className={styles.del}
@@ -188,6 +230,13 @@ export default function TransactionsPage() {
           </Button>
         </nav>
       )}
+
+      <SplitSheet
+        transaction={splitTarget}
+        account={activeAccount}
+        currency={currency}
+        onClose={() => setSplitTarget(null)}
+      />
     </div>
   );
-}
+}undefined

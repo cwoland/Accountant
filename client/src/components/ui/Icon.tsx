@@ -10,11 +10,6 @@ import {
 } from 'lucide-react';
 import { toIconName, type IconName } from '@accountant/shared';
 
-/**
- * Имя из реестра → компонент Lucide. Единственное место в приложении,
- * где делается это сопоставление: если иконка появилась в ICON_NAMES,
- * но не здесь — TypeScript не пропустит (Record требует все ключи).
- */
 const ICON_COMPONENTS: Record<IconName, LucideIcon> = {
   'house': House,
   'lightbulb': Lightbulb,
@@ -76,16 +71,12 @@ const ICON_COMPONENTS: Record<IconName, LucideIcon> = {
 };
 
 interface IconProps {
-  /** Имя из реестра. Неизвестное значение (старая запись в БД) → circle. */
+
   name: string | null | undefined;
   size?: number;
   strokeWidth?: number;
   className?: string;
-  /**
-   * Иконка категории — всегда украшение рядом с её названием, поэтому
-   * по умолчанию скрыта от скринридера. Передай label, если иконка
-   * остаётся единственным носителем смысла.
-   */
+
   label?: string;
 }
 
@@ -103,5 +94,4 @@ export default function Icon({ name, size = 16, strokeWidth = 2, className, labe
   );
 }
 
-/** Список для пикера иконок в форме категории. */
 export const ICON_PICKER_ORDER: IconName[] = Object.keys(ICON_COMPONENTS) as IconName[];

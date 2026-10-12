@@ -1,0 +1,55 @@
+.wrap { display: flex; flex-direction: column; gap: 16px; }
+
+.head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  font-size: var(--t-body); color: var(--bone-3);
+}
+.head b {
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-lead);
+  color: var(--bone);
+  white-space: nowrap;
+}
+
+.list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 132px;
+  gap: 12px;
+  align-items: center;
+}
+.name {
+  font-size: var(--t-body);
+  font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.input {
+  display: flex; align-items: center;
+  background: var(--wall-2);
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--r-tile);
+}
+.input:focus-within { border-color: var(--bone); }
+.input input {
+  width: 100%; min-width: 0;
+  height: 42px; padding: 0 4px 0 12px;
+  background: none; border: none; outline: none;
+  color: var(--bone);
+  font-family: var(--font-num);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-body);
+  text-align: right;
+}
+.cur { padding: 0 11px 0 2px; font-family: var(--font-num); color: var(--bone-3); }
+
+.sum {
+  font-family: var(--font-num);
+  font-size: var(--t-meta);
+  color: var(--ok);
+}
+.sum[data-bad] { color: var(--over); }
+
+.actions { display: flex; gap: 8px; }

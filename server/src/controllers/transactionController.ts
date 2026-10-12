@@ -17,6 +17,7 @@ import { currentUser } from '../middleware/auth.js';
 import { valid } from '../middleware/validate.js';
 import { badRequest, forbidden, notFound } from '../lib/HttpError.js';
 import { toTransactionDto } from '../lib/serializers.js';
+import { recurrenceFields } from '../services/recurringService.js';
 
 type Scope = { user: Types.ObjectId; account: null } | { account: Types.ObjectId };
 
@@ -35,7 +36,7 @@ export const getTransactions: RequestHandler = async (req, res, next) => {
     const q = valid<typeof listTransactionsQuery>(req, 'query');
     const scope = await resolveScope(req, q.accountId);
 
-    const filter: Record<string, unknown> = { ...scope };
+    const filter: Record<string, unknown> = { ...scope, transfer: null };
     if (q.type) filter.type = q.type;
     if (q.category) filter.category = new Types.ObjectId(q.category);
     if (q.startDate || q.endDate) {
@@ -111,9 +112,13 @@ export const createTransaction: RequestHandler = async (req, res, next) => {
       category: category._id,
       description: body.description,
       date: body.date,
-      isRecurring: body.isRecurring,
-      recurringPeriod: body.isRecurring ? (body.recurringPeriod ?? 'monthly') : null,
       tags: body.tags,
+      isRecurring: body.isRecurring,
+      ...recurrenceFields({
+        isRecurring: body.isRecurring,
+        period: body.recurringPeriod ?? 'monthly',
+        date: body.date,
+      }),
     });
 
     await doc.populate('category', 'name icon ink isMandatory type');

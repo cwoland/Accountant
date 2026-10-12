@@ -41,6 +41,8 @@ export interface TransactionDto {
   isRecurring: boolean;
   recurringPeriod: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
   tags: string[];
+  transfer: Id | null;
+  split: { user: Id; share: Minor }[];
   createdAt: string;
 }
 
@@ -165,11 +167,32 @@ export interface PendingItemDto {
   kind: 'mandatory' | 'debt' | 'goal' | 'queued';
   id: Id;
   title: string;
-  /** Иконка своей категории: без неё ряд рисовал пустые кружки. */
   icon: IconName;
   subtitle: string;
   amount: Minor | null;
   ink: number;
   dueDate: string | null;
   url: string;
+}
+
+export interface CategoryBudgetDto {
+  category: Id;
+  amount: Minor;
+  spent: Minor;
+}
+export interface CategoryBudgetDto {
+  category: Id;
+  amount: Minor;
+  spent: Minor;
+}
+
+export interface SettlementDto {
+  balances: { user: Id; amount: Minor }[];
+  debts: { from: Id; to: Id; amount: Minor }[];
+}
+
+export interface TransferDto {
+  transferId: Id;
+  from: Id;
+  to: Id;
 }

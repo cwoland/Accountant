@@ -40,6 +40,6 @@ export async function unsubscribeFromPush(): Promise<void> {
       await sub.unsubscribe();
     }
   } catch {
-    //
+
   }
 }

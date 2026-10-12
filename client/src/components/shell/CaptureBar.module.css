@@ -27,6 +27,6 @@
     background: none; max-width: none; margin: 0;
     padding: 2px 14px 16px var(--pad);
   }
-  .quiet { display: none; }          /* съёмка чека живёт внутри листа записи */
+  .quiet { display: none; }
   .primary { white-space: nowrap; height: 44px; padding: 0 14px; gap: 7px; font-size: 14px; }
 }

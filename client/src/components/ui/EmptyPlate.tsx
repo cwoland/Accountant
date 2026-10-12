@@ -4,7 +4,7 @@ import styles from './EmptyPlate.module.css';
 interface Props {
   icon: ReactNode;
   title: string;
-  /** Что именно сделать, а не «здесь пока ничего нет». */
+
   description: string;
   action?: ReactNode;
 }

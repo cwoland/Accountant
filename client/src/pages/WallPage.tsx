@@ -2,7 +2,12 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { asMinor, formatMoney, type AccountDto, type PendingItemDto } from '@accountant/shared';
-import { getAccountsApi, getBudgetApi, getStatsApi } from '../api/endpoints';
+import {
+  getAccountsApi,
+  getBudgetApi,
+  getCategoryBudgetsApi,
+  getStatsApi,
+} from '../api/endpoints';
 import { getPendingApi } from '../api/pending';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
@@ -14,12 +19,6 @@ import OpList from '../components/wall/OpList';
 import WallSkeleton from '../components/wall/WallSkeleton';
 import Icon from '../components/ui/Icon';
 import { monthMeta } from '../lib/month';
-
-function flagFor(total: number, base: number, hasBudget: boolean): string | undefined {
-  if (!hasBudget) return undefined;
-  const pct = Math.round((total / base) * 100);
-  return pct >= 10 ? `${pct}%` : undefined;
-}
 
 function dueFlag(iso: string): string {
   const days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000);
@@ -71,6 +70,13 @@ export default function WallPage() {
 
   const list: AccountDto[] = accounts.data ?? [];
   const position = activeAccountId === null ? 1 : list.findIndex((a) => a._id === activeAccountId) + 2;
+
+  const catBudgets = useQuery({
+    queryKey: ['category-budgets', year, month],
+    queryFn: () => getCategoryBudgetsApi({ year, month }).then((r) => r.data),
+  });
+
+  const limitBy = new Map((catBudgets.data ?? []).map((b) => [b.category, b.amount]));
 
   return (
     <>
@@ -138,20 +144,25 @@ export default function WallPage() {
 
       <Row title="Этот месяц" count={`${expenseCats.length} КАТЕГОРИЙ`} allHref="/transactions">
         <Rail label="Расходы по категориям">
-          {expenseCats.map((c) => (
-            <Poster
-              key={c.categoryId}
-              ink={c.ink}
-              ratio={c.total / fillBase}
-              icon={<Icon name={c.icon} size={17} />}
-              title={c.name}
-              amount={formatMoney(c.total, currency)}
-              meta={`${c.count} ОПЕР.`}
-              flag={flagFor(c.total, fillBase, plan > 0)}
-              flagAlert={plan > 0 && c.total > fillBase}
-              onClick={() => navigate(`/transactions?category=${c.categoryId}`)}
-            />
-          ))}
+          {expenseCats.map((c) => {
+            const limit = limitBy.get(c.categoryId);
+            const base = limit ?? fillBase;
+            const ratio = c.total / base;
+            return (
+              <Poster
+                key={c.categoryId}
+                ink={c.ink}
+                ratio={ratio}
+                icon={<Icon name={c.icon} size={17} />}
+                title={c.name}
+                amount={formatMoney(c.total, currency)}
+                meta={limit ? `ИЗ ${formatMoney(limit, currency)}` : `${c.count} ОПЕР.`}
+                flag={`${Math.round(ratio * 100)}%`}
+                flagAlert={ratio > 1}
+                onClick={() => navigate(`/transactions?category=${c.categoryId}`)}
+              />
+            );
+          })}
         </Rail>
       </Row>
 

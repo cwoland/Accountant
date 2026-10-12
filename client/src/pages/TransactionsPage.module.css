@@ -1,6 +1,9 @@
 .page { padding-top: 4px; }
 
-.head { padding: 0 var(--pad); margin-bottom: 16px; }
+.head {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 0 var(--pad); margin-bottom: 16px;
+}
 .title { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
 .count { font-family: var(--font-num); font-size: var(--t-meta); color: var(--bone-4); margin-top: 4px; }
 
@@ -34,7 +37,7 @@
 @keyframes shimmer { to { background-position: -400% 0; } }
 
 .op {
-  display: grid; grid-template-columns: 30px 1fr auto 32px;
+  display: grid; grid-template-columns: 30px 1fr auto auto;
   gap: 11px; align-items: center;
   padding: 11px 0; border-bottom: 1px solid var(--hairline);
 }
@@ -76,3 +79,15 @@
   .head, .filters, .list, .pager { padding-left: 0; padding-right: 0; }
   .filters { grid-template-columns: 1fr 160px 200px; }
 }
+.headText { flex: 1; min-width: 0; }
+.headActions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.split {
+  width: 32px; height: 32px;
+  border-radius: var(--r-chip);
+  color: var(--bone-4);
+  display: grid; place-items: center;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.split:hover { color: var(--bone); background: var(--wall-2); }
+.split[data-active] { color: var(--ok); }

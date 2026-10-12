@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { INKS } from '@accountant/shared';
+import LangSwitch from '@/components/ui/LangSwitch';
 import styles from './AuthLayout.module.css';
 
 export default function AuthLayout({ title, footer, children }: {
@@ -28,7 +29,9 @@ export default function AuthLayout({ title, footer, children }: {
           {children}
           <p className={styles.footer}>{footer}</p>
         </div>
+
+        <LangSwitch />
       </main>
     </div>
   );
-}
+}undefined

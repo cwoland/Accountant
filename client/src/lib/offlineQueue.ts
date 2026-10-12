@@ -66,7 +66,7 @@ export async function dequeue(id: number): Promise<void> {
   try {
     await tx<undefined>('readwrite', (s) => s.delete(id));
   } catch {
-    //
+
   }
 }
 
@@ -77,7 +77,7 @@ export async function markAttempt(item: QueuedTransaction): Promise<void> {
       s.put({ ...item, attempts: item.attempts + 1 }),
     );
   } catch {
-    /* ignore */
+
   }
 }
 

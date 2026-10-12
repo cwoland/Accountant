@@ -22,7 +22,7 @@
   color: var(--bone); font-size: var(--t-lead);
 }
 .input::placeholder { color: var(--bone-4); }
-/* Числа везде табличные — суммы должны выравниваться по разряду. */
+
 .input[type='number'], .input[inputmode='decimal'] {
   font-family: var(--font-num); font-variant-numeric: tabular-nums;
 }

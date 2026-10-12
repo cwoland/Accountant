@@ -64,4 +64,4 @@ export default function AccountChat({ accountId, accountName }: { accountId: str
       </form>
     </div>
   );
-}
+}undefined

@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
-import { EMOJI_TO_ICON, ICON_NAMES } from '@accountant/shared';
+import {
+  EMOJI_TO_ICON,
+  ICON_NAMES,
+  nextOccurrence,
+  type RecurringPeriod,
+} from '@accountant/shared';
 import { connectDB, disconnectDB } from '../config/db.js';
 import { logger } from '../lib/logger.js';
 
@@ -108,9 +113,7 @@ const steps: { id: string; run: () => Promise<string> }[] = [
   {
     id: '005-emoji-to-icon-name',
     async run() {
-      // В базе icon лежал эмодзи-строкой. Теперь это имя из закрытого
-      // реестра: свои категории пользователей тоже надо перевести,
-      // иначе они отрисуются нейтральным кружком.
+
       const db = mongoose.connection;
       const out: string[] = [];
 
@@ -123,7 +126,7 @@ const steps: { id: string; run: () => Promise<string> }[] = [
           );
           moved += r.modifiedCount;
         }
-        // Всё, что не опознали (чужие эмодзи, мусор) — в нейтральный кружок.
+
         const leftovers = await db.collection(coll).updateMany(
           { icon: { $nin: [...ICON_NAMES] } },
           { $set: { icon: coll === 'accounts' ? 'users' : 'circle' } },
@@ -131,6 +134,44 @@ const steps: { id: string; run: () => Promise<string> }[] = [
         out.push(`${coll}: ${moved} опознано, ${leftovers.modifiedCount} в circle`);
       }
       return out.join(' · ');
+    },
+  },
+  {
+    id: '006-sprint4-fields',
+    async run() {
+      const db = mongoose.connection;
+
+      const backfilled = await db.collection('transactions').updateMany(
+        { transfer: { $exists: false } },
+        {
+          $set: {
+            transfer: null,
+            split: [],
+            recurringParent: null,
+            recurringAnchorDay: null,
+            recurringStoppedAt: null,
+          },
+        },
+      );
+
+      const orphanRules = await db
+        .collection('transactions')
+        .find({ isRecurring: true, recurringPeriod: { $ne: null }, nextRunAt: null })
+        .toArray();
+
+      let activated = 0;
+      for (const rule of orphanRules) {
+        const period = rule.recurringPeriod as RecurringPeriod;
+        const date = rule.date as Date;
+        const anchor = date.getUTCDate();
+        await db.collection('transactions').updateOne(
+          { _id: rule._id },
+          { $set: { recurringAnchorDay: anchor, nextRunAt: nextOccurrence(date, period, anchor) } },
+        );
+        activated += 1;
+      }
+
+      return `transactions: ${backfilled.modifiedCount} дополнено · серий активировано: ${activated}`;
     },
   },
 ];
