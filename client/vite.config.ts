@@ -55,7 +55,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['recharts'],
           motion: ['framer-motion'],
           query: ['@tanstack/react-query'],
         },
