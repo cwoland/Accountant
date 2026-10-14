@@ -93,5 +93,3 @@ export default function Icon({ name, size = 16, strokeWidth = 2, className, labe
     />
   );
 }
-
-export const ICON_PICKER_ORDER: IconName[] = Object.keys(ICON_COMPONENTS) as IconName[];

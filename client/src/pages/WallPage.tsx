@@ -57,6 +57,11 @@ export default function WallPage() {
     queryFn: () => getPendingApi({ accountId: activeAccountId ?? undefined }).then((r) => r.data),
   });
 
+  const catBudgets = useQuery({
+    queryKey: ['category-budgets', year, month],
+    queryFn: () => getCategoryBudgetsApi({ year, month }).then((r) => r.data),
+  });
+
   if (stats.isPending || budget.isPending) return <WallSkeleton />;
 
   const spent = stats.data?.summary.expense ?? asMinor(0);
@@ -70,11 +75,6 @@ export default function WallPage() {
 
   const list: AccountDto[] = accounts.data ?? [];
   const position = activeAccountId === null ? 1 : list.findIndex((a) => a._id === activeAccountId) + 2;
-
-  const catBudgets = useQuery({
-    queryKey: ['category-budgets', year, month],
-    queryFn: () => getCategoryBudgetsApi({ year, month }).then((r) => r.data),
-  });
 
   const limitBy = new Map((catBudgets.data ?? []).map((b) => [b.category, b.amount]));
 

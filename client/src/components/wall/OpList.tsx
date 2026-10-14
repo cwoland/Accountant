@@ -42,4 +42,4 @@ export default function OpList({ accountId, currency, limit }: Props) {
             ))}
         </ul>
     );
-}undefined
+}

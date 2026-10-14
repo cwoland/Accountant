@@ -40,7 +40,10 @@ export default function TransactionsPage() {
   const patch = (next: Record<string, string>) => {
     setParams((prev) => {
       const p = new URLSearchParams(prev);
-      for (const [k, v] of Object.entries(next)) v ? p.set(k, v) : p.delete(k);
+      for (const [k, v] of Object.entries(next)) {
+        if (v) p.set(k, v);
+        else p.delete(k);
+      }
       if (!('page' in next)) p.delete('page');
       return p;
     });
@@ -239,4 +242,4 @@ export default function TransactionsPage() {
       />
     </div>
   );
-}undefined
+}

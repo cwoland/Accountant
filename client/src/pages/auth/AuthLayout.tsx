@@ -34,4 +34,4 @@ export default function AuthLayout({ title, footer, children }: {
       </main>
     </div>
   );
-}undefined
+}

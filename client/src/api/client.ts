@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance } from 'axios';
+import axios, { type AxiosError, type AxiosInstance } from 'axios';
 import type { ApiError } from '@accountant/shared';
 import { useAuthStore } from '../store/authStore';
 import { translateCode } from '../i18n';
