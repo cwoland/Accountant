@@ -2,6 +2,7 @@ node_modules/
 client/node_modules/
 server/node_modules/
 server/.env
+server/.env.*
 client/.env
 dist/
 .DS_Storeclient/public/__shot.html

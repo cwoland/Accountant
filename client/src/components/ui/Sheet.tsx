@@ -17,20 +17,26 @@ export default function Sheet({ open, onClose, title, children }: SheetProps) {
   const panel = useRef<HTMLDivElement>(null);
   const restoreTo = useRef<HTMLElement | null>(null);
   const titleId = useId();
+  const closeRef = useRef(onClose);
+
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
+    if (e.key === 'Escape') { e.stopPropagation(); closeRef.current(); return; }
     if (e.key !== 'Tab' || !panel.current) return;
 
-    const nodes = [...panel.current.querySelectorAll<HTMLElement>(FOCUSABLE)]
+    const nodes = 
+    [...panel.current.querySelectorAll<HTMLElement>(FOCUSABLE)]
       .filter((el) => el.offsetParent !== null);
-    const first = nodes[0];
-    const last = nodes[nodes.length - 1];
-    if (!first || !last) return;
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      if (!first || !last) return;
 
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-  }, [onClose]);
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus(); 
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus(); }
+      }, []);
 
   useEffect(() => {
     if (!open) return;
